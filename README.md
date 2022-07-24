@@ -4,7 +4,7 @@
   <ul>
     <div align="center">
       <img width="70" height="70" src="https://i.imgur.com/UEuws82.png" /> 
-      <h2><strong>➡️ Bot</strong></h2>
+      <h2><strong>Bot</strong></h2>
       <p align="center">Description</p>
       <a href="https://github.com/Nisru-Projects/NisruBot"><img src="https://img.shields.io/badge/Nisru-Bot-purple"/></a>
     </div>
