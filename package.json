@@ -3,12 +3,21 @@
   "version": "1.0.0",
   "description": "A simple discord bot.",
   "main": "index.js",
+  "repository": "https://github.com/Nisru-Projects/nisruignite.git",
+  "author": "Eman134#3237 <kaykeeman@gmail.com>",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "discordjs"
   ],
-  "author": "Eman134#3237",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "discord.js": "^13.8.1",
+    "fs": "^0.0.1-security",
+    "knex": "^2.1.0",
+    "pg": "^8.7.3",
+    "sqlite3": "^5.0.8"
+  }
 }
