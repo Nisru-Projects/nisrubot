@@ -4,7 +4,7 @@
   "description": "A simple discord bot.",
   "main": "index.js",
   "repository": "https://github.com/Nisru-Projects/nisruignite.git",
-  "author": "Eman134#3237 <kaykeeman@gmail.com>",
+  "author": "Eman134 <kaykeeman@gmail.com>",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
