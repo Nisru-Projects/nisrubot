@@ -1,15 +1,15 @@
-const Discord = require('discord.js');
+const { GatewayIntentBits, Collection, Client} = require('discord.js');
 const fs = require('fs');
 const { readdirSync } = require('fs');
 
-module.exports = class MenuClient extends Discord.Client {
+module.exports = class MenuClient extends Client {
 
     constructor(options = {}) {
 
         super({
         
             disableMentions: 'everyone', 
-            intents: ['GUILDS', 'GUILD_MESSAGES']
+            intents: [GatewayIntentBits.Guilds]
             
         })
 
@@ -31,7 +31,7 @@ module.exports = class MenuClient extends Discord.Client {
 
     loadCommands() {
         
-        const x = new Discord.Collection();
+        const x = new Collection();
 
         const commands = readdirSync('./src/cmds/');
 
