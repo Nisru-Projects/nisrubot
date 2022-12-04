@@ -3,7 +3,7 @@ module.exports = {
     name: "ready",
     execute: async(client) => {
 
-        client.application.commands.set([]);
+        //client.application.commands.set([]);
         
         const commands = client.commands.map(cmd => { 
             return {

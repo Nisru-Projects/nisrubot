@@ -2,7 +2,7 @@ const { GatewayIntentBits, Collection, Client} = require('discord.js');
 const fs = require('fs');
 const { readdirSync } = require('fs');
 
-module.exports = class MenuClient extends Client {
+module.exports = class NisruClient extends Client {
 
     constructor(options = {}) {
 
@@ -53,6 +53,17 @@ module.exports = class MenuClient extends Client {
         console.log(`[COMANDOS] Carregados`.green )
     }
 
+    loadEvents() {
+        fs.readdir("./src/events/", (err, files) => {
+            if (err) return console.error(err);
+            files.forEach(file => {
+                let eventFunction = require(`./events/${file}`);
+                this.on(eventFunction.name, (...args) => eventFunction.execute(this, ...args));
+            });
+        });
+        console.log(`[EVENTOS] Carregados`.green )
+    }
+
     loadData(options) {
 
         const db = require('knex')({
@@ -77,17 +88,6 @@ module.exports = class MenuClient extends Client {
             process.exit(1);
         });
     
-    }
-
-    loadEvents() {
-        fs.readdir("./src/events/", (err, files) => {
-            if (err) return console.error(err);
-            files.forEach(file => {
-                let eventFunction = require(`./events/${file}`);
-                this.on(eventFunction.name, (...args) => eventFunction.execute(this, ...args));
-            });
-        });
-        console.log(`[EVENTOS] Carregados`.green )
     }
 
     async login() {

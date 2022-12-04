@@ -4,12 +4,13 @@ class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
 			name: 'ping',
-			description: 'Verifica a latência do bot'
+			description: 'Verifica a latência do bot',
+			permissions: ['user'],
 		});
 	}
 
-	execute(client, interaction) {
-		return interaction.reply({ content: `Latência atual: ${client.ws.ping}ms` });
+	execute(interaction) {
+		return interaction.reply({ content: `Latência atual: ${this.client.ws.ping}ms` });
 	}
 }
 

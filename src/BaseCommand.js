@@ -4,6 +4,7 @@ class BaseCommand {
         this.name = options.name || null,
         this.description = options.description || "Sem descrição.",
         this.options = options.options || undefined
+        this.permissions = options.permissions || []
     }
 }
 
