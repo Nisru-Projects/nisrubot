@@ -5,13 +5,14 @@ module.exports = class MiddlewareController {
         this.interaction = interaction
     }
 
-    async checkPermissions (cmdPermissions, client = this.client, interaction = this.interaction) {
-        const user = await client.db.select('*').from('users').where('discord_id', interaction.user.id).first()
+    async checkPermissions (cmdPermissions) {
+        const user = await this.client.db.select('*').from('users').where('discord_id', this.interaction.user.id).first()
         const userPermissions = user.permissions
         return cmdPermissions.every(perm => userPermissions.includes(perm)) || userPermissions.includes("*")
     }
 
-    async checkCharacter ()  {
-
+    async getCharacter ()  {
+        const user = await this.client.db.select('characters').from('users').where('discord_id', this.interaction.user.id).first()
+        return user.characters == null ? false : user.characters[0]
     }
 }

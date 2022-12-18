@@ -1,6 +1,7 @@
 module.exports = {
    
     name: "ready",
+    once: true,
     execute: async(client) => {
 
         //client.application.commands.set([]);
@@ -17,7 +18,7 @@ module.exports = {
             guild.commands.set(commands)
         })
 
-        console.log(`\n         Bot iniciado.\n`.green);
+        console.log(`\n         Bot started.\n`.green);
 
     }
 
