@@ -13,6 +13,8 @@ module.exports = (client) => {
 
             let cmd = new Command(client);
 
+            cmd.category = category
+
             if (!file.includes('!')) commandsCollection.set(cmd.name, cmd)
 
         })

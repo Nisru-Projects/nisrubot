@@ -23,9 +23,9 @@ module.exports = {
 
             const character = await Middleware.getCharacter()
 
-            if (!character) return interaction.reply({ content: messages.noCharacter, ephemeral: true })
+            if (!character && cmd.category != "users") return interaction.reply({ content: messages.noCharacter, ephemeral: true })
 
-            cmd.execute(interaction).catch((err) => {
+            cmd.execute(interaction, character).catch((err) => {
                 console.log(err)
                 interaction.reply({ content: messages.errorCommand, ephemeral: true })
             })

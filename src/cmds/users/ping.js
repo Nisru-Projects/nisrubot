@@ -13,7 +13,7 @@ module.exports = class Command extends BaseCommand {
 		super(client, {
 			name: messages.name,
 			description: messages.description,
-			permissions: ['user'],
+			permissions: ['user']
 		});
 	}
 	execute(interaction) {
