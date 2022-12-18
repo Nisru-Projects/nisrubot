@@ -3,6 +3,7 @@ const MiddlewareController = require('../controllers/MiddlewareController');
 const messages = {
     "noPermission": "Você não tem permissão para executar este comando.",
     "noCharacter": "Você não possui um personagem criado atualmente, digite /personagem para criar um personagem.",
+    "noSelectedCharacter": "Você não possui um personagem selecionado atualmente, digite /personagem para selecionar um personagem.",
     "errorCommand": "Ocorreu um erro ao executar este comando."
 }
 
@@ -21,9 +22,12 @@ module.exports = {
 
             if (!permissions) return interaction.reply({ content: messages.noPermission, ephemeral: true })
 
-            const character = await Middleware.getCharacter()
+            const character = await Middleware.getCharacters()
 
-            if (!character && cmd.category != "users") return interaction.reply({ content: messages.noCharacter, ephemeral: true })
+            if (cmd.category != 'users' && cmd.fileName != 'characters.js') {
+                if (!character) return interaction.reply({ content: messages.noCharacter, ephemeral: true })
+                if (!character.selected_character) return interaction.reply({ content: messages.noSelectedCharacter, ephemeral: true })
+            }
 
             cmd.execute(interaction, character).catch((err) => {
                 console.log(err)
