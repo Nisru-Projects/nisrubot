@@ -1,12 +1,12 @@
 const BaseCommand = require("../../BaseCommand");
+const LanguagesController = require("../../controllers/LanguagesController");
 
 const messages = {
 	name: "ping",
 	description: "Verifica a latência do bot",
-	ping: "Latência atual: {ping}ms"
+	calculating: "**Calculando...**",
+	ping: "🏓 Latência atual: {ping}ms\n🤖 Latência da API: {api}ms"
 }
-
-const setStrValues = require("../../utils/setStrValues")
 
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
@@ -17,7 +17,13 @@ module.exports = class Command extends BaseCommand {
 		});
 	}
 	execute(interaction) {
-		const messagesdotping = setStrValues(messages.ping, { ping: this.client.ws.ping })
-		return interaction.reply({ content: messagesdotping, ephemeral: true })
+
+		const Languages = new LanguagesController(interaction.user.language)
+
+		const { setStrValues } = Languages
+
+		return interaction.reply({ fetchReply: true, content: setStrValues(messages.ping, { ping: messages.calculating, api: this.client.ws.ping }) }).then(msg => {
+			msg.edit({ content: setStrValues(messages.ping, { ping: msg.createdTimestamp - interaction.createdTimestamp, api: this.client.ws.ping }) })
+		})
 	}
 }

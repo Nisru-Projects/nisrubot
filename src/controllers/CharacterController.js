@@ -1,11 +1,28 @@
 const randomString = require('../utils/randomString')
 
-const exampleCharacter = {
-    id: 'RANDOM',
-    name: 'John Doe',
-    level: 1,
-    class: 'Warrior',
+/*
+**character_id**: BIGINT (Timestamp)
+
+**skin**: JSON {
+
 }
+
+**exp**: BIGINT
+
+**attributes**: JSON {
+
+}
+
+**essence**: JSON {
+
+class: TEXT
+
+race: TEXT
+
+constellation: TEXT
+
+}
+*/
 
 module.exports = class CharacterController {
     constructor(client, user) {
@@ -13,12 +30,21 @@ module.exports = class CharacterController {
         this.user = user;
     }
 
+    setCharactersCache (characters) {
+        this.characters = characters
+    }
+
+    getCharacterInfo (character_id, table) {
+        return this.client.db.select('*').from(table).where('character_id', character_id).first()
+    }
+
     async getCharacters ()  {
         const user_data = await this.client.db.select('characters', 'selected_character').from('users').where('discord_id', this.user.id).first()
-        return user_data.characters == null ? false : {
-            selected_character: user_data.selected_character,
-            characters: user_data.characters
+        this.characters = {
+            selected_character: user_data.characters == null ? undefined : user_data.selected_character,
+            characters: user_data.characters == null ? [] : user_data.characters
         }
+        return this.characters
     }
 
     async createCharacter (data) {

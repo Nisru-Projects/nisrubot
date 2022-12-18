@@ -18,6 +18,8 @@ module.exports = {
             let cmd = client.commands.get(interaction.commandName)
             if(!cmd) return
 
+            await Middleware.checkUser()
+
             const permissions = await Middleware.checkPermissions(cmd.permissions)
 
             if (!permissions) return interaction.reply({ content: messages.noPermission, ephemeral: true })
@@ -25,7 +27,7 @@ module.exports = {
             const character = await Middleware.getCharacters()
 
             if (cmd.category != 'users' && cmd.fileName != 'characters.js') {
-                if (!character) return interaction.reply({ content: messages.noCharacter, ephemeral: true })
+                if (character.characters.length == 0) return interaction.reply({ content: messages.noCharacter, ephemeral: true })
                 if (!character.selected_character) return interaction.reply({ content: messages.noSelectedCharacter, ephemeral: true })
             }
 
