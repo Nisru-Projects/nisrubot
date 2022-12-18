@@ -3,6 +3,7 @@ const fs = require('fs');
 
 const commandHandler = require('./handlers/commandHandler');
 const eventsHandler = require('./handlers/eventsHandler');
+const DatabaseController = require('./controllers/DatabaseController');
 
 module.exports = class NisruClient extends Client {
 
@@ -15,11 +16,13 @@ module.exports = class NisruClient extends Client {
             
         })
 
+        
         console.log(' ');
         this.verification(options)
         commandHandler(this)
         eventsHandler(this)
-        this.loadData(options)
+        const Database = new DatabaseController(options)
+        Database.loadData(this)
     }
 
     verification(options) {
@@ -29,32 +32,6 @@ module.exports = class NisruClient extends Client {
         }
         this.token = options.BOT_TOKEN
         this.config = options
-    }
-
-    loadData(options) {
-
-        const db = require('knex')({
-            client: 'pg',
-            connection: {
-              host : options.DB_HOST,
-              port : options.DB_PORT,
-              user : options.DB_USER,
-              password : options.DB_PASSWORD,
-              database : options.DB_DATABASE,
-              supportBigNumbers: true,
-              bigNumberStrings: true,
-            }
-        });
-
-        this.db = db;
-
-        db.raw('select 1+1 as result').then(() => {
-            this.emit('databaseConnected', this)
-        }).catch(err => {
-            console.log(`[DATABASE] Not connected`.red )
-            process.exit(1);
-        });
-    
     }
 
     async login() {

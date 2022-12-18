@@ -15,6 +15,7 @@ module.exports = {
         })
         
         client.guilds.cache.forEach(guild => {
+            // checar se já tem os comandos
             guild.commands.set(commands)
         })
 
