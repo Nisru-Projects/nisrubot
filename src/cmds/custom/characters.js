@@ -4,6 +4,7 @@ const disableAllButtons = require("../../utils/disableAllButtons");
 const CharacterController = require("../../controllers/CharacterController");
 const LanguagesController = require("../../controllers/LanguagesController");
 const { calculateLevel } = require("../../utils/levelingForms");
+const uppercaseFirstLetter = require("../../utils/uppercaseFirstLetter");
 
 const messages = {
 	name: "characters",
@@ -16,15 +17,21 @@ const messages = {
 	charactersButtons: {
 		create: "Criar novo personagem",
 		select: "Selecionar {character_name}",
+		delete: "Excluir {character_name}",
+		sell: "Vender {character_name}",
+		customize: "Customizar {character_name}",
+		confirmCreate: "Confirmar criação",
+		cancelCreate: "Cancelar criação",
 		confirmSelect: "Confirmar seleção",
 		cancelSelect: "Cancelar seleção",
-		delete: "Excluir {character_name}",
 		confirmDelete: "Confirmar exclusão",
 		cancelDelete: "Cancelar exclusão",
-		customize: "Customizar {character_name}",
-		sell: "Vender {character_name}",
 		confirmSell: "Confirmar venda",
 		cancelSell: "Cancelar venda",
+	},
+	creationCharacterEmbed: {
+		title: "Criação de Personagem",
+		description: "Escolha um nome para seu personagem",
 	},
 }
 
@@ -96,21 +103,75 @@ module.exports = class Command extends BaseCommand {
 			)
 		}
 
+		const checkButtons = (type) => {
+			console.log(type)
+			return [
+				new ButtonBuilder()
+					.setCustomId('confirm')
+					.setLabel(messages.charactersButtons[`confirm${type}`])
+					.setEmoji('✅')
+					.setStyle(ButtonStyle.Success),
+				new ButtonBuilder()
+					.setCustomId('cancel')
+					.setLabel(messages.charactersButtons[`cancel${type}`])
+					.setEmoji('❌')
+					.setStyle(ButtonStyle.Danger),
+			]
+		}
+
+		const creationCharacter = async () => {
+			const creationEmbed = {
+				color: 0x36393f,
+				title: messages.creationCharacterEmbed.title,
+				timestamp: new Date().toISOString(),
+				description: messages.creationCharacterEmbed.description
+			}
+			const creationComponents = () => {
+				
+			}
+
+			return { creationEmbed, creationComponents }
+		}
+
 		const charactersComponents = []
 		
 		if (charactersButtons.length > 0) charactersComponents.push(new ActionRowBuilder().addComponents(charactersButtons))
 		charactersComponents.push(new ActionRowBuilder().addComponents(actionsButtons))
-
+		
 		const charactersMsg = await interaction.reply({ embeds: [charactersEmbed], components: charactersComponents, fetchReply: true })
-
+		
 		const filter = (interaction) => interaction.user.id === interaction.user.id
-
-		const collector = charactersMsg.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 10000 })
-
+		
+		const collector = charactersMsg.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 15000 })
+		
+		var checkAction
+		
+		var action = {
+			name: '',
+			step: 0
+		}
+		
 		collector.on('collect', async (i) => {
 			i.deferUpdate().then(async () => {
 				collector.resetTimer()
+				
+				if (!checkAction && !['confirm', 'cancel'].includes(i.customId) && !i.customId.includes('select')) {
+					checkAction = uppercaseFirstLetter(i.customId)
+					charactersComponents.push(new ActionRowBuilder().addComponents(checkButtons(checkAction)))
+					charactersComponents.forEach((row) => {
+						row.components.forEach((button) => {
+							if (button.data.custom_id === i.customId) button.data.disabled = true
+						})
+					})
+					return charactersMsg.edit({ components: charactersComponents })
+				}
+				else checkAction = undefined
+
+				action.name = i.customId.includes('select') ? 'select' : i.customId
+				
 				if (i.customId === 'create') {
+					const { creationEmbed, creationComponents } = await creationCharacter(action)
+					charactersMsg.edit({ embeds: [creationEmbed], components: creationComponents })
 					//start create character
 				}
 				if (i.customId === 'customize') {
