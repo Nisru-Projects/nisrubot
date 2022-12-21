@@ -2,8 +2,6 @@ module.exports = class LanguagesController {
 
     constructor (lang) {
         this.lang = lang || "en-US";
-        this.setStrValues = this.setStrValues.bind(this)
-        this.debug = this.debug.bind(this)
     }
 
     setStrValues (message, vars) {
@@ -28,6 +26,6 @@ module.exports = class LanguagesController {
     debug () {
         const description = "{?has_character}Selecione um personagem ({cleitin}) para visualizar seus dados{?has_character}\n{!has_character} Você não possui nenhum personagem{!has_character}"
         const example = this.setStrValues(description, { has_character: true, cleitin: "cleitin rei delas" })
-        console.log(example) // deve retornar: 'Selecione um personagem (cleitin rei delas) para visualizar seus dados'
+        return example // deve retornar: 'Selecione um personagem (cleitin rei delas) para visualizar seus dados'
     }
 }

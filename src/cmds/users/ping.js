@@ -20,10 +20,8 @@ module.exports = class Command extends BaseCommand {
 
 		const Languages = new LanguagesController(interaction.user.language)
 
-		const { setStrValues } = Languages
-
-		return interaction.reply({ fetchReply: true, content: setStrValues(messages.ping, { ping: messages.calculating, api: this.client.ws.ping }) }).then(msg => {
-			msg.edit({ content: setStrValues(messages.ping, { ping: msg.createdTimestamp - interaction.createdTimestamp, api: this.client.ws.ping }) })
+		return interaction.reply({ fetchReply: true, content: Languages.setStrValues(messages.ping, { ping: messages.calculating, api: this.client.ws.ping }) }).then(msg => {
+			msg.edit({ content: Languages.setStrValues(messages.ping, { ping: msg.createdTimestamp - interaction.createdTimestamp, api: this.client.ws.ping }) })
 		})
 	}
 }

@@ -51,7 +51,7 @@ module.exports = class Command extends BaseCommand {
 	}
 	async execute(interaction, characters) {
 
-		const { setStrValues } = new LanguagesController(interaction.user.language)
+		const Languages = new LanguagesController(interaction.user.language)
 
 		const Character = new CharacterController(this.client, interaction.user)
 
@@ -61,7 +61,7 @@ module.exports = class Command extends BaseCommand {
 			const character = await Character.getCharacterInfo(character_id, 'characters_geral')
 			return {
 				name: character.name,
-				value: setStrValues(messages.charactersEmbed.level, { level: calculateLevel(character.exp) }),
+				value: Languages.setStrValues(messages.charactersEmbed.level, { level: calculateLevel(character.exp) }),
 				inline: true
 			}
 		})
@@ -71,14 +71,14 @@ module.exports = class Command extends BaseCommand {
 			title: messages.charactersEmbed.title,
 			timestamp: new Date().toISOString(),
 			fields: charactersFields,
-			description: setStrValues(messages.charactersEmbed.description, { has_character: characters.characters.length > 0 })
+			description: Languages.setStrValues(messages.charactersEmbed.description, { has_character: characters.characters.length > 0 })
 		}
 
 		const charactersButtons = characters.characters.map(async (character_id, index) => {
 			const character = await Character.getCharacterInfo(character_id, 'characters_geral')
 			return new ButtonBuilder()
 				.setCustomId(`select${index}`)
-				.setLabel(setStrValues(messages.charactersButtons.select, { character_name: character.name }))
+				.setLabel(Languages.setStrValues(messages.charactersButtons.select, { character_name: character.name }))
 				.setEmoji('👤')
 				.setStyle(ButtonStyle.Secondary)
 		})
@@ -95,16 +95,16 @@ module.exports = class Command extends BaseCommand {
 			actionsButtons.push(
 				new ButtonBuilder()
 					.setCustomId('customize')
-					.setLabel(setStrValues(messages.charactersButtons.customize, { character_name: characters.selected.name }))
+					.setLabel(Languages.setStrValues(messages.charactersButtons.customize, { character_name: characters.selected.name }))
 					.setEmoji('1054051525204385882')
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
 					.setCustomId('delete')
-					.setLabel(setStrValues(messages.charactersButtons.delete, { character_name: characters.selected.name }))
+					.setLabel(Languages.setStrValues(messages.charactersButtons.delete, { character_name: characters.selected.name }))
 					.setStyle(ButtonStyle.Danger),
 				new ButtonBuilder()
 					.setCustomId('sell')
-					.setLabel(setStrValues(messages.charactersButtons.sell, { character_name: characters.selected.name }))
+					.setLabel(Languages.setStrValues(messages.charactersButtons.sell, { character_name: characters.selected.name }))
 					.setStyle(ButtonStyle.Success)
 			)
 		}
