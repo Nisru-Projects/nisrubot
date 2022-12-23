@@ -1,57 +1,21 @@
 const BaseCommand = require("../../BaseCommand");
-const { ActionRowBuilder, ButtonStyle, ButtonBuilder, ComponentType, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder, SelectMenuBuilder } = require("discord.js");
+const { ActionRowBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require("discord.js");
 const disableAllButtons = require("../../utils/disableAllButtons");
 const CharacterController = require("../../controllers/CharacterController");
-const LanguagesController = require("../../controllers/LanguagesController");
 const { calculateLevel } = require("../../utils/levelingForms");
 const uppercaseFirstLetter = require("../../utils/uppercaseFirstLetter");
-
-const messages = {
-	name: "characters",
-	description: "Visualize e gerencie seus personagens",
-	charactersEmbed: {
-		level: "Level {level}",
-		title: "Menu de Personagens",
-		description: "{?has_character} Selecione um personagem para visualizar seus dados{?has_character}\n{!has_character} Você não possui nenhum personagem{!has_character}",
-	},
-	charactersButtons: {
-		create: "Criar novo personagem",
-		select: "Selecionar {character_name}",
-		delete: "Excluir {character_name}",
-		sell: "Vender {character_name}",
-		customize: "Customizar {character_name}",
-		confirmCreate: "Criar personagem",
-		cancelCreate: "Cancelar criação",
-		confirmSelect: "Confirmar seleção",
-		cancelSelect: "Cancelar seleção",
-		confirmDelete: "Confirmar exclusão",
-		cancelDelete: "Cancelar exclusão",
-		confirmSell: "Confirmar venda",
-		cancelSell: "Cancelar venda",
-	},
-	creationCharacterEmbed: {
-		title: "Criação de Personagem",
-		description: "Escolha um nome para seu personagem",
-	},
-	creationCharacterButtons: {
-		confirm: "Confirmar personagem",
-		cancel: "Cancelar criação",
-		next: "Próximo",
-		back: "Voltar",
-	},
-}
 
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
-			name: messages.name,
-			description: messages.description,
+			name: client.languages.content('commands.characters.name'),
+			description: client.languages.content('commands.characters.description'),
 			permissions: ['user'],
 		});
 	}
 	async execute(interaction, characters) {
 
-		const Languages = new LanguagesController(interaction.user.language)
+		const LanguagesController = this.client.languages
 
 		const Character = new CharacterController(this.client, interaction.user)
 
@@ -61,24 +25,24 @@ module.exports = class Command extends BaseCommand {
 			const character = await Character.getCharacterInfo(character_id, 'characters_geral')
 			return {
 				name: character.name,
-				value: Languages.setStrValues(messages.charactersEmbed.level, { level: calculateLevel(character.exp) }),
+				value: LanguagesController.content("messages.characters.charactersEmbed.level", { level: calculateLevel(character.exp) }),
 				inline: true
 			}
 		})
 
 		const charactersEmbed = {
 			color: 0x36393f,
-			title: messages.charactersEmbed.title,
+			title: LanguagesController.content("messages.characters.charactersEmbed.title"),
 			timestamp: new Date().toISOString(),
 			fields: charactersFields,
-			description: Languages.setStrValues(messages.charactersEmbed.description, { has_character: characters.characters.length > 0 })
+			description: LanguagesController.content("messages.characters.charactersEmbed.description", { has_character: characters.characters.length > 0 })
 		}
 
 		const charactersButtons = characters.characters.map(async (character_id, index) => {
 			const character = await Character.getCharacterInfo(character_id, 'characters_geral')
 			return new ButtonBuilder()
 				.setCustomId(`select${index}`)
-				.setLabel(Languages.setStrValues(messages.charactersButtons.select, { character_name: character.name }))
+				.setLabel(LanguagesController.content("messages.characters.charactersButtons.select", { character_name: character.name }))
 				.setEmoji('👤')
 				.setStyle(ButtonStyle.Secondary)
 		})
@@ -86,7 +50,7 @@ module.exports = class Command extends BaseCommand {
 		const actionsButtons = [
 			new ButtonBuilder()
 				.setCustomId('create')
-				.setLabel(messages.charactersButtons.create)
+				.setLabel(LanguagesController.content("messages.characters.charactersButtons.create"))
 				.setEmoji('👤')
 				.setStyle(ButtonStyle.Primary),
 		]
@@ -95,16 +59,16 @@ module.exports = class Command extends BaseCommand {
 			actionsButtons.push(
 				new ButtonBuilder()
 					.setCustomId('customize')
-					.setLabel(Languages.setStrValues(messages.charactersButtons.customize, { character_name: characters.selected.name }))
+					.setLabel(LanguagesController.content("messages.characters.charactersButtons.customize", { character_name: characters.selected.name }))
 					.setEmoji('1054051525204385882')
 					.setStyle(ButtonStyle.Primary),
 				new ButtonBuilder()
 					.setCustomId('delete')
-					.setLabel(Languages.setStrValues(messages.charactersButtons.delete, { character_name: characters.selected.name }))
+					.setLabel(LanguagesController.content("messages.characters.charactersButtons.delete", { character_name: characters.selected.name }))
 					.setStyle(ButtonStyle.Danger),
 				new ButtonBuilder()
 					.setCustomId('sell')
-					.setLabel(Languages.setStrValues(messages.charactersButtons.sell, { character_name: characters.selected.name }))
+					.setLabel(LanguagesController.content("messages.characters.charactersButtons.sell", { character_name: characters.selected.name }))
 					.setStyle(ButtonStyle.Success)
 			)
 		}
@@ -113,12 +77,12 @@ module.exports = class Command extends BaseCommand {
 			return [
 				new ButtonBuilder()
 					.setCustomId('confirm')
-					.setLabel(messages.charactersButtons[`confirm${type}`])
+					.setLabel(LanguagesController.content(`messages.characters.charactersButtons.confirm${type}`))
 					.setEmoji('✅')
 					.setStyle(ButtonStyle.Success),
 				new ButtonBuilder()
 					.setCustomId('cancel')
-					.setLabel(messages.charactersButtons[`cancel${type}`])
+					.setLabel(LanguagesController.content(`messages.characters.charactersButtons.cancel${type}`))
 					.setEmoji('❌')
 					.setStyle(ButtonStyle.Danger),
 			]
@@ -173,33 +137,33 @@ module.exports = class Command extends BaseCommand {
 				const creationCharacter = async () => {
 					const creationEmbed = {
 						color: 0x36393f,
-						title: messages.creationCharacterEmbed.title,
+						title: LanguagesController.content("messages.characters.creationCharacterEmbed.title"),
 						timestamp: new Date().toISOString(),
-						description: messages.creationCharacterEmbed.description
+						description: LanguagesController.content("messages.characters.creationCharacterEmbed.description")
 					}
 					const creationComponents = () => {
 						return [
 							new ActionRowBuilder().addComponents([
 								new ButtonBuilder()
 									.setCustomId('back')
-									.setLabel(messages.creationCharacterButtons.back)
+									.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.back"))
 									.setEmoji('⬅️')
 									.setStyle(ButtonStyle.Primary)
 									.setDisabled(true),
 								new ButtonBuilder()
 									.setCustomId('next')
-									.setLabel(messages.creationCharacterButtons.next)
+									.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.next"))
 									.setEmoji('➡️')
 									.setStyle(ButtonStyle.Primary),
 								new ButtonBuilder()
 									.setCustomId('confirmcreation')
-									.setLabel(messages.creationCharacterButtons.confirm)
+									.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.confirm"))
 									.setEmoji('✅')
 									.setStyle(ButtonStyle.Success)
 									.setDisabled(true),
 								new ButtonBuilder()
 									.setCustomId('cancel')
-									.setLabel(messages.creationCharacterButtons.cancel)
+									.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.cancel"))
 									.setEmoji('❌')
 									.setStyle(ButtonStyle.Danger)
 							])

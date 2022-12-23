@@ -1,0 +1,52 @@
+{
+    "name": "pt-BR",
+    "displayName": "Português (Brasil)",
+    "commands": {
+        "characters": {
+            "name": "characters",
+            "description": "Visualize e gerencie seus personagens"
+        },
+        "ping": {
+            "name": "ping",
+            "description": "Verifica a latência do bot"
+        }
+    },
+    "messages": {
+        "characters": {
+            "charactersEmbed": {
+                "level": "Level {level}",
+                "title": "Menu de Personagens",
+                "description": "{?has_character} Selecione um personagem para visualizar seus dados{?has_character}\n{!has_character} Você não possui nenhum personagem{!has_character}"
+            },
+            "charactersButtons": {
+                "create": "Criar novo personagem",
+                "select": "Selecionar {character_name}",
+                "delete": "Excluir {character_name}",
+                "sell": "Vender {character_name}",
+                "customize": "Customizar {character_name}",
+                "confirmCreate": "Criar personagem",
+                "cancelCreate": "Cancelar criação",
+                "confirmSelect": "Confirmar seleção",
+                "cancelSelect": "Cancelar seleção",
+                "confirmDelete": "Confirmar exclusão",
+                "cancelDelete": "Cancelar exclusão",
+                "confirmSell": "Confirmar venda",
+                "cancelSell": "Cancelar venda"
+            },
+            "creationCharacterEmbed": {
+                "title": "Criação de Personagem",
+                "description": "Escolha um nome para seu personagem"
+            },
+            "creationCharacterButtons": {
+                "confirm": "Confirmar personagem",
+                "cancel": "Cancelar criação",
+                "next": "Próximo",
+                "back": "Voltar"
+            }
+        },
+        "ping": {
+            "calculating": "**Calculando...**",
+            "ping": "🏓 Latência atual: {ping}ms\n🤖 Latência da API: {api}ms"
+        }
+    }
+}

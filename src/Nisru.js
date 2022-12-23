@@ -4,6 +4,7 @@ const fs = require('fs');
 const commandHandler = require('./handlers/commandHandler');
 const eventsHandler = require('./handlers/eventsHandler');
 const DatabaseController = require('./controllers/DatabaseController');
+const LanguagesController = require('./controllers/LanguagesController');
 
 module.exports = class NisruClient extends Client {
 
@@ -16,13 +17,15 @@ module.exports = class NisruClient extends Client {
             
         })
 
-        
         console.log(' ');
+        this.languages = new LanguagesController("pt-BR")
+        this.languages.load()
         this.verification(options)
         commandHandler(this)
         eventsHandler(this)
         const Database = new DatabaseController(options)
         Database.loadData(this)
+
     }
 
     verification(options) {
