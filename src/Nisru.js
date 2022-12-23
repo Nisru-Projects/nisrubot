@@ -11,10 +11,8 @@ module.exports = class NisruClient extends Client {
     constructor(options = {}) {
 
         super({
-        
-            disableMentions: 'everyone', 
+            allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
             intents: [GatewayIntentBits.Guilds]
-            
         })
 
         console.log(' ');

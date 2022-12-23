@@ -1,5 +1,4 @@
 module.exports = class MiddlewareController {
-
     constructor(client, interaction) {
         this.client = client
         this.interaction = interaction

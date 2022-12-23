@@ -8,7 +8,6 @@ const messages = {
 }
 
 module.exports = {
-   
     name: "interactionCreate",
     execute: async(client, interaction) => {
 
@@ -39,5 +38,4 @@ module.exports = {
         }
 
     }
-
 }

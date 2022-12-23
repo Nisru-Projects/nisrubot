@@ -11,8 +11,43 @@
             "description": "Verifica a latência do bot"
         }
     },
+    "races": {
+        "human": "Humano",
+        "elf": "Elfo",
+        "dwarf": "Anão",
+        "orc": "Orc",
+        "gnome": "Gnomo",
+        "demon": "Demônio",
+        "dragon": "Dragão",
+        "vampire" : "Vampiro",
+        "half-elf": "Meio-Elfo",
+        "half-orc": "Meio-Orc",
+        "half-demon": "Meio-Demônio",
+        "half-dragon" : "Meio-Dragão",
+        "half-vampire" : "Meio-Vampiro"
+    },
     "messages": {
+        "modals": {
+            "timeout": "Tempo de envio do formulário foi esgotado",
+            "character_name_modal": {
+                "title": "Nomeie o seu personagem",
+                "fieldname": "O nome não poderá ser alterado novamente!",
+                "success": "Seu personagem foi nomeado com sucesso para **{character_name}**"
+            }
+        },
         "characters": {
+            "creationCharacterDefaults": {
+                "select": "Selecionar {option}",
+                "confirm": "Confirmar {option}",
+                "cancel": "Cancelar {option}",
+                "createOption": "Criação",
+                "selectOption": "Seleção",
+                "deleteOption": "Exclusão",
+                "sellOption": "Venda",
+                "customizeOption": "Customização",
+                "race": "Raça",
+                "name": "Nome"
+            },
             "charactersEmbed": {
                 "level": "Level {level}",
                 "title": "Menu de Personagens",
@@ -25,23 +60,17 @@
                 "sell": "Vender {character_name}",
                 "customize": "Customizar {character_name}",
                 "confirmCreate": "Criar personagem",
-                "cancelCreate": "Cancelar criação",
-                "confirmSelect": "Confirmar seleção",
-                "cancelSelect": "Cancelar seleção",
-                "confirmDelete": "Confirmar exclusão",
-                "cancelDelete": "Cancelar exclusão",
-                "confirmSell": "Confirmar venda",
-                "cancelSell": "Cancelar venda"
-            },
-            "creationCharacterEmbed": {
-                "title": "Criação de Personagem",
-                "description": "Escolha um nome e gênero para seu personagem"
+                "setname": "Nomear {character_name}"
             },
             "creationCharacterButtons": {
-                "confirm": "Confirmar personagem",
-                "cancel": "Cancelar criação",
                 "next": "Próximo",
-                "back": "Voltar"
+                "back": "Voltar",
+                "gender0": "Masculino",
+                "gender1": "Feminino"
+            },
+            "creationCharacterStepDescription": {
+                "step0": "Escolha um nome e gênero para seu personagem",
+                "step1": "Escolha uma raça e classe para seu personagem"
             }
         },
         "ping": {

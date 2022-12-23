@@ -1,7 +1,6 @@
 const fs = require("fs")
 const path = require("path")
 module.exports = class LanguagesController {
-
     constructor (lang) {
         this.lang = lang || "pt-BR"
     }
@@ -24,12 +23,26 @@ module.exports = class LanguagesController {
     }
 
     content (key, vars, lang = this.lang) {
-        const keyify = key.split(".")
-        let contentkey = this.get(lang)
-        keyify.forEach(k => {
-            contentkey = contentkey[k]
-        })
-        return this.read(contentkey, vars)
+        try {
+            if (!this.get(lang)) return "Language not found"
+            let contentkey = this.get(lang)
+            
+            const keyify = key.split(".")
+
+            keyify.forEach(k => {
+                if (!contentkey[k]) {
+                    throw new Error("Key not found");
+                }
+                contentkey = contentkey[k] 
+            })
+            if (!contentkey) {
+                throw new Error("Key not found");
+            }
+            return this.read(contentkey, vars)
+        } catch (error) {
+            console.log(`[LANGUAGE] An error occurred while trying to get the content of the key ${key} in the language ${lang}\nERROR MESSAGE: ${error.message}`.red)
+            return key.slice(key.lastIndexOf(".") + 1)
+        }
     }
 
     read (message, vars) {
@@ -46,6 +59,14 @@ module.exports = class LanguagesController {
                 }
                 message = message.replace(new RegExp(`\\{\\?${key}}`, "g"), "")
                 message = message.replace(new RegExp(`\\{!${key}}`, "g"), "")
+            }
+            if (typeof vars[key] === "string" && vars[key].startsWith("{%") && vars[key].endsWith("}")) {
+                const keyify = vars[key].replace("{%", "").replace("}", "").split(".")
+                let contentkey = this.get(this.lang)
+                keyify.forEach(k => {
+                    contentkey = contentkey[k]
+                })
+                vars[key] = contentkey
             }
             message = message.replace(`{${key}}`, vars[key])
         }
