@@ -35,7 +35,7 @@
             },
             "creationCharacterEmbed": {
                 "title": "Criação de Personagem",
-                "description": "Escolha um nome para seu personagem"
+                "description": "Escolha um nome e gênero para seu personagem"
             },
             "creationCharacterButtons": {
                 "confirm": "Confirmar personagem",

@@ -95,23 +95,64 @@ module.exports = class Command extends BaseCommand {
 		
 		const charactersMsg = await interaction.reply({ embeds: [charactersEmbed], components: charactersComponents, fetchReply: true })
 		
-		const filter = (interaction) => interaction.user.id === interaction.user.id
+		const filter = (i) => i.user.id === interaction.user.id
 		
 		const collector = charactersMsg.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 15000 })
 		
 		var action = {
 			name: '',
-			step: 0
+			active: false,
+			step: 0,
+			stepMax: 1
 		}
 		
+		const creationCharacter = async () => {
+			const creationEmbed = {
+				color: 0x36393f,
+				title: LanguagesController.content("messages.characters.creationCharacterEmbed.title") + ` ${action.step}/${action.stepMax}`,
+				timestamp: new Date().toISOString(),
+				description: LanguagesController.content("messages.characters.creationCharacterEmbed.description")
+			}
+			const creationComponents = () => {
+				return [
+					new ActionRowBuilder().addComponents([
+						new ButtonBuilder()
+							.setCustomId('back')
+							.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.back"))
+							.setEmoji('⬅️')
+							.setStyle(ButtonStyle.Primary)
+							.setDisabled(action.step === 0),
+						new ButtonBuilder()
+							.setCustomId('next')
+							.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.next"))
+							.setEmoji('➡️')
+							.setStyle(ButtonStyle.Primary)
+							.setDisabled(action.step === action.stepMax),
+						new ButtonBuilder()
+							.setCustomId('confirmcreation')
+							.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.confirm"))
+							.setEmoji('✅')
+							.setStyle(ButtonStyle.Success)
+							.setDisabled(true),
+						new ButtonBuilder()
+							.setCustomId('cancel')
+							.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.cancel"))
+							.setEmoji('❌')
+							.setStyle(ButtonStyle.Danger)
+					])
+				]
+			}
+
+			return { creationEmbed, creationComponents }
+		}
+
 		collector.on('collect', async (i) => {
 			i.deferUpdate().then(async () => {
 				collector.resetTimer()
 
-				if (action.check && ['confirm', 'cancel'].includes(i.customId)) {
-					collector.emit('action', i)
-					return
-				}
+				if (action.check && ['confirm', 'cancel'].includes(i.customId)) return collector.emit('action', i)
+
+				if (action.active) return collector.emit('step', i)
 				
 				if (!action.check && !['confirm', 'cancel'].includes(i.customId) && !i.customId.includes('select')) {
 					action.check = uppercaseFirstLetter(i.customId)
@@ -130,52 +171,25 @@ module.exports = class Command extends BaseCommand {
 			})
 		})
 
+		collector.on('step', async (i) => {
+			if (["next", "back"].includes(i.customId)) {
+				action.step = i.customId === "next" ? action.step + 1 : action.step - 1
+				action.step = action.step < 0 ? 0 : action.step
+				action.step = action.step > action.stepMax ? action.stepMax : action.step
+				collector.emit('stepUpdate', i)
+			}
+		})
+
+		collector.on('stepUpdate', async (i) => {
+			const { creationEmbed, creationComponents } = await creationCharacter()
+			charactersMsg.edit({ embeds: [creationEmbed], components: creationComponents() })
+		})
+
 		collector.on('action', async (i) => {
 
-			if (action.check === 'Create' && i.customId === 'confirm') {
-
-				const creationCharacter = async () => {
-					const creationEmbed = {
-						color: 0x36393f,
-						title: LanguagesController.content("messages.characters.creationCharacterEmbed.title"),
-						timestamp: new Date().toISOString(),
-						description: LanguagesController.content("messages.characters.creationCharacterEmbed.description")
-					}
-					const creationComponents = () => {
-						return [
-							new ActionRowBuilder().addComponents([
-								new ButtonBuilder()
-									.setCustomId('back')
-									.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.back"))
-									.setEmoji('⬅️')
-									.setStyle(ButtonStyle.Primary)
-									.setDisabled(true),
-								new ButtonBuilder()
-									.setCustomId('next')
-									.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.next"))
-									.setEmoji('➡️')
-									.setStyle(ButtonStyle.Primary),
-								new ButtonBuilder()
-									.setCustomId('confirmcreation')
-									.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.confirm"))
-									.setEmoji('✅')
-									.setStyle(ButtonStyle.Success)
-									.setDisabled(true),
-								new ButtonBuilder()
-									.setCustomId('cancel')
-									.setLabel(LanguagesController.content("messages.characters.creationCharacterButtons.cancel"))
-									.setEmoji('❌')
-									.setStyle(ButtonStyle.Danger)
-							])
-						]
-					}
-		
-					return { creationEmbed, creationComponents }
-				}
-
-				const { creationEmbed, creationComponents } = await creationCharacter()
-				charactersMsg.edit({ embeds: [creationEmbed], components: creationComponents() })
-				action.step = 1
+			if (action.check === 'Create' && i.customId === 'confirm') { 
+				action.active = true
+				collector.emit('stepUpdate', i)
 			} else if (action.check === 'Create' && i.customId === 'cancel') {
 				collector.stop()
 			}
