@@ -9,6 +9,10 @@
         "ping": {
             "name": "ping",
             "description": "Verifica a latência do bot"
+        },
+        "imagine": {
+            "name": "imagine",
+            "description": "Utilize a sua criatividade com a OpenAI"
         }
     },
     "races": {

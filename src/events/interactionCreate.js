@@ -25,12 +25,13 @@ module.exports = {
 
             const character = await Middleware.getCharacters()
 
-            if (cmd.category != 'users' && cmd.fileName != 'characters.js') {
+            if (!['users', 'admtools'].includes(cmd.category) && cmd.fileName != 'characters.js') {
                 if (character.characters.length == 0) return interaction.reply({ content: messages.noCharacter, ephemeral: true })
                 if (!character.selected_character) return interaction.reply({ content: messages.noSelectedCharacter, ephemeral: true })
             }
 
-            cmd.execute(interaction, character).catch((err) => {
+            cmd.execute(interaction, character).then(() => {
+            }).catch((err) => {
                 console.log(err)
                 interaction.reply({ content: messages.errorCommand, ephemeral: true })
             })
