@@ -4,42 +4,219 @@ const disableAllButtons = require("../../utils/disableAllButtons");
 const CharacterController = require("../../controllers/CharacterController");
 const { calculateLevel } = require("../../utils/levelingForms");
 const uppercaseFirstLetter = require("../../utils/uppercaseFirstLetter");
+const attributesUtils = require("../../utils/attributesUtils");
 
 const races = [
 	{ 
 		name: "human",
+		value: "human",
 		emoji: "👨",
 		description: "Human",
 		selected: true,
-		history: "Human history"
+		history: "Human history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
 	},
 	{
 		name: "elf",
+		value: "elf",
 		emoji: "🧝",
 		description: "Elf",
 		selected: true,
-		history: "Elf history"
+		history: "Elf history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
 	},
 	{
 		name: "dwarf",
+		value: "dwarf",
 		emoji: "🧔",
 		description: "Dwarf",
 		selected: true,
-		history: "Dwarf history"
+		history: "Dwarf history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
 	},
 	{
 		name: "orc",
+		value: "orc",
 		emoji: "👹",
 		description: "Orc",
 		selected: true,
-		history: "Orc history"
+		history: "Orc history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
 	},
 	{
 		name: "gnome",
+		value: "gnome",
 		emoji: "🧙",
 		description: "Gnome",
 		selected: true,
-		history: "Gnome history"
+		history: "Gnome history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
+	}
+]
+
+const classes = [
+	{
+		name: "warrior",
+		value: "warrior",
+		emoji: "⚔️",
+		description: "Warrior",
+		selected: true,
+		history: "Warrior history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
+	},
+	{
+		name: "paladin",
+		value: "paladin",
+		emoji: "🛡️",
+		description: "Paladin",
+		selected: true,
+		history: "Paladin history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
+	},
+	{
+		name: "hunter",
+		value: "hunter",
+		emoji: "🏹",
+		description: "Hunter",
+		selected: true,
+		history: "Hunter history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
+	},
+	{
+		name: "rogue",
+		value: "rogue",
+		emoji: "🗡️",
+		description: "Rogue",
+		selected: true,
+		history: "Rogue history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
+	},
+	{
+		name: "priest",
+		value: "priest",
+		emoji: "🧙",
+		description: "Priest",
+		selected: true,
+		history: "Priest history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
+	},
+	{
+		name: "death_knight",
+		value: "death_knight",
+		emoji: "🦇",
+		description: "Death Knight",
+		selected: true,
+		history: "Death Knight history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
+	},
+	{
+		name: "shaman",
+		value: "shaman",
+		emoji: "🌊",
+		description: "Shaman",
+		selected: true,
+		history: "Shaman history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
+	},
+	{
+		name: "mage",
+		value: "mage",
+		emoji: "🧙",
+		description: "Mage",
+		selected: true,
+		history: "Mage history",
+		baseAttributes: {
+			strength: 1,
+			dexterity: 1,
+			constitution: 1,
+			intelligence: 1,
+			wisdom: 1,
+			charisma: 1
+		}
 	}
 ]
 
@@ -135,7 +312,7 @@ module.exports = class Command extends BaseCommand {
 		
 		const filter = (i) => i.user.id === interaction.user.id
 		
-		const collector = charactersMsg.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 30000 })
+		const collector = charactersMsg.createMessageComponentCollector({ filter, time: 30000 })
 		
 		var action = {
 			name: '',
@@ -153,7 +330,10 @@ module.exports = class Command extends BaseCommand {
 				color: 0x36393f,
 				title: LanguagesController.content("messages.characters.charactersEmbed.title") + ` ${action.step}/${action.stepMax}`,
 				timestamp: new Date().toISOString(),
-				description: LanguagesController.content(`messages.characters.creationCharacterStepDescription.step${action.step}`)
+				description: `
+${LanguagesController.content(`messages.characters.creationCharacterStepDescription.step${action.step}`)}
+${action.character.baseAttributes ? `${LanguagesController.content(`attributes.attributesnoun`)}\n${Object.keys(action.character.baseAttributes).map((attribute) => `${LanguagesController.content(`attributes.${attribute}`)}: ${action.character.baseAttributes[attribute]}`).join('\n')}` : ''}
+`
 			}
 			const creationComponents = () => {
 				const components = [
@@ -190,12 +370,32 @@ module.exports = class Command extends BaseCommand {
 							.setCustomId('selectname')
 							.setLabel(LanguagesController.content(`messages.characters.charactersButtons.setname`, { character_name: action.character.name }))
 							.setEmoji('📝')
-							.setStyle(ButtonStyle.Secondary),
-						new ButtonBuilder()
+							.setStyle(ButtonStyle.Secondary)
+					]))
+					components.push(new ActionRowBuilder().addComponents([
+						new StringSelectMenuBuilder()
 							.setCustomId('selectgender')
-							.setLabel(LanguagesController.content(`messages.characters.creationCharacterButtons.gender${action.character.gender}`))
-							.setEmoji(action.character.gender === 0 ? '♂️' : '♀️')
-							.setStyle(ButtonStyle.Secondary),
+							.setPlaceholder(LanguagesController.content(`messages.characters.creationCharacterDefaults.select`, { option: `{%genders.gendernoun}` }))
+							.addOptions([
+								{
+									label: LanguagesController.content(`genders.male`),
+									value: "male",
+									emoji: '♂️',
+									default: action.character.gender === "male"
+								},
+								{
+									label: LanguagesController.content(`genders.female`),
+									value: "female",
+									emoji: '♀️',
+									default: action.character.gender === "female"
+								},
+								{
+									label: LanguagesController.content(`genders.other`),
+									value: "other",
+									emoji: '🏳️‍🌈',
+									default: action.character.gender === "other"
+								}
+							])
 					]))
 				}
 				if (action.step === 1) {
@@ -206,9 +406,24 @@ module.exports = class Command extends BaseCommand {
 							.addOptions(races.filter(race => race.selected).map((race) => {
 								return {
 									label: race.name,
-									value: race.name,
+									value: race.value,
 									emoji: race.emoji,
-									description: race.description
+									description: race.description,
+									default: action.character.race === race.name
+								}
+							}))
+					]))
+					components.push(new ActionRowBuilder().addComponents([
+						new StringSelectMenuBuilder()
+							.setCustomId('selectclass')
+							.setPlaceholder(LanguagesController.content(`messages.characters.creationCharacterDefaults.select`, { option: `{%messages.characters.creationCharacterDefaults.class}` }))
+							.addOptions(classes.filter(character_class => character_class.selected).map((character_class) => {
+								return {
+									label: character_class.name,
+									value: character_class.value,
+									emoji: character_class.emoji,
+									description: character_class.description,
+									default: action.character.class === character_class.name
 								}
 							}))
 					]))
@@ -226,12 +441,18 @@ module.exports = class Command extends BaseCommand {
 		})
 
 		collector.on('collect', async (i) => {
-			if (i.customId === 'selectgender') {
-				return i.deferUpdate().then(async () => {
-					action.character.gender = action.character.gender === 0 ? 1 : 0
-					return collector.emit('update_embed', i)
+
+			if (i.isStringSelectMenu()) {
+				i.deferUpdate().then(async () => {
+					action.character[i.customId.replace("select", "")] = i.values[0]
+					if (['selectrace', 'selectclass'].includes(i.customId)) {
+						action.character.baseAttributes = attributesUtils.mergeAttributes(races.find((race) => race.value == action.character.race)?.baseAttributes, classes.find((character_class) => character_class.value == action.character.class)?.baseAttributes)
+					}
 				})
 			}
+
+			if (!i.isButton()) return
+
 			if (i.customId === 'selectname') {
 
 				const modal = new ModalBuilder()

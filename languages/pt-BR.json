@@ -26,6 +26,21 @@
         "half-dragon" : "Meio-Dragão",
         "half-vampire" : "Meio-Vampiro"
     },
+    "genders": {
+        "gendernoun": "Gênero",
+        "male": "Masculino",
+        "female": "Feminino",
+        "other": "Outro"
+    },
+    "attributes": {
+        "attributesnoun": "Atributos",
+        "strength": "Força",
+        "dexterity": "Destreza",
+        "constitution": "Constituição",
+        "intelligence": "Inteligência",
+        "wisdom": "Sabedoria",
+        "charisma": "Carisma"
+    },
     "messages": {
         "modals": {
             "timeout": "Tempo de envio do formulário foi esgotado",
@@ -46,6 +61,7 @@
                 "sellOption": "Venda",
                 "customizeOption": "Customização",
                 "race": "Raça",
+                "class": "Classe",
                 "name": "Nome"
             },
             "charactersEmbed": {
