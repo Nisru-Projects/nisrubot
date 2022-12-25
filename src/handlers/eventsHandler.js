@@ -12,6 +12,6 @@ module.exports = (client) => {
             }
             client.on(eventFunction.name, execute);
         });
+        console.log(`[EVENTS] Loaded ${files.length} events`.green )
     });
-    console.log(`[EVENTS] Loaded`.green )
 }

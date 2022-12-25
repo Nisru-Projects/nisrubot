@@ -20,8 +20,8 @@ module.exports = (client) => {
 
         })
     })
-
-    client.commands = commandsCollection
     
-    console.log(`[COMMANDS] Loaded`.green )
+    client.commands = commandsCollection
+    console.log(`[COMMANDS] Loaded ${client.commands.size} commands`.green )
+
 }

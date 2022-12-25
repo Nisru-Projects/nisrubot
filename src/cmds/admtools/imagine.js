@@ -31,7 +31,7 @@ module.exports = class Command extends BaseCommand {
         const opt = interaction.options.getString('options') ?? "medieval style, digital art, hd"
 
         axios.post('https://api.openai.com/v1/images/generations', {
-            prompt: `${interaction.options.getString('prompt')} ${opt}`
+            prompt: `${interaction.options.getString('prompt')}, ${opt}`
         }, {
             headers: {
                 'Authorization': `Bearer ${this.client.config.OPENAI_API_KEY}`,
@@ -54,8 +54,7 @@ module.exports = class Command extends BaseCommand {
 
         }).catch(err => {
             interaction.editReply({ content: err.message })
-        }
-        )
+        })
 
         return 
 

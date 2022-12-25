@@ -1,4 +1,4 @@
-module.exports = class DatabaseController {
+module.exports = class DatabaseManager {
     constructor(options) {
         this.options = options
     }

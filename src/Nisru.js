@@ -3,8 +3,12 @@ const fs = require('fs');
 
 const commandHandler = require('./handlers/commandHandler');
 const eventsHandler = require('./handlers/eventsHandler');
-const DatabaseController = require('./controllers/DatabaseController');
+const DatabaseManager = require('./managers/DatabaseManager');
 const LanguagesController = require('./controllers/LanguagesController');
+const CacheManager = require('./managers/CacheManager');
+const { createClient } = require('redis');
+const redisClient = createClient();
+redisClient.on('error', (err) => console.log('Redis Client Error', err));
 
 module.exports = class NisruClient extends Client {
 
@@ -21,9 +25,9 @@ module.exports = class NisruClient extends Client {
         this.verification(options)
         commandHandler(this)
         eventsHandler(this)
-        const Database = new DatabaseController(options)
+        const Database = new DatabaseManager(options)
         Database.loadData(this)
-
+        this.redisCache = new CacheManager(redisClient)
     }
 
     verification(options) {

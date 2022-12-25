@@ -18,8 +18,8 @@ module.exports = class LanguagesController {
         files.forEach(file => {
             const lang = require(path.resolve(folder, file))
             this.set(lang.name, lang)
-            console.log(`[LANGUAGE] Loaded ${lang.name}`.green)
         })
+        console.log(`[LANGUAGE] Loaded ${files.length} languages`.green)
     }
 
     content (key, vars, lang = this.lang) {
