@@ -68,7 +68,9 @@
                 "class": "Classe",
                 "name": "Nome",
                 "random": "Aleatório",
-                "none": "Nenhum"
+                "none": "Nenhum",
+                "constellation": "Constelação",
+                "element": "Elemento"
             },
             "charactersEmbed": {
                 "level": "Level {level}",

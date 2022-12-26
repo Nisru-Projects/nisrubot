@@ -1,29 +1,29 @@
 module.exports = class CacheManager {
-    constructor(client) {
-        this.client = client;
-    }
+	constructor(client) {
+		this.client = client
+	}
 
-    connect() {
-        return client.connect()
-    }
+	connect() {
+		return this.client.connect()
+	}
 
-    clear() {
-        return client.flushAll()
-    }
+	clear() {
+		return this.client.flushAll()
+	}
 
-    set(key, value) {
-        return client.set(key, value)
-    }
+	set(key, value) {
+		return this.client.set(key, value)
+	}
 
-    get(key) {
-        return client.get(key)
-    }
+	get(key) {
+		return this.client.get(key)
+	}
 
-    delete(key) {
-        return client.del(key)
-    }
+	delete(key) {
+		return this.client.del(key)
+	}
 
-    exists(key) {
-        return client.exists(key)
-    }
+	exists(key) {
+		return this.client.exists(key)
+	}
 }

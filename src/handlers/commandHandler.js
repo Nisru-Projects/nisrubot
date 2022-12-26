@@ -1,27 +1,27 @@
-const { Collection } = require('discord.js');
-const { readdirSync } = require('fs');
+const { Collection } = require('discord.js')
+const { readdirSync } = require('fs')
 module.exports = (client) => {
-    const commandsCollection = new Collection();
+	const commandsCollection = new Collection()
 
-    const commands = readdirSync('./src/cmds/');
+	const categories = readdirSync('./src/cmds/')
 
-    commands.forEach(category => {
-        const commands = readdirSync(`./src/cmds/${category}`);
-        commands.filter(file => !file.includes("!") && file.endsWith(".js")).forEach(file => {
+	categories.forEach(category => {
+		const commands = readdirSync(`./src/cmds/${category}`)
+		commands.filter(file => !file.includes('!') && file.endsWith('.js')).forEach(file => {
 
-            let Command = require('../cmds/' + category + '/' + file.replace('.js', ''))
+			const Command = require('../cmds/' + category + '/' + file.replace('.js', ''))
 
-            let cmd = new Command(client);
+			const cmd = new Command(client)
 
-            cmd.category = category
-            cmd.fileName = file
+			cmd.category = category
+			cmd.fileName = file
 
-            if (!file.includes('!')) commandsCollection.set(cmd.name, cmd)
+			if (!file.includes('!')) commandsCollection.set(cmd.name, cmd)
 
-        })
-    })
-    
-    client.commands = commandsCollection
-    console.log(`[COMMANDS] Loaded ${client.commands.size} commands`.green )
+		})
+	})
+
+	client.commands = commandsCollection
+	console.log(`[COMMANDS] Loaded ${client.commands.size} commands`.green)
 
 }

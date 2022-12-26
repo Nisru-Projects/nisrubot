@@ -24,5 +24,8 @@
     "pg": "^8.7.3",
     "redis": "^4.5.1",
     "sqlite3": "^5.0.8"
+  },
+  "devDependencies": {
+    "eslint": "^8.30.0"
   }
 }

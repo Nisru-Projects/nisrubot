@@ -1,53 +1,69 @@
 module.exports = class DataController {
-    constructor(knexDatabase, redisCache) {
-        this.knexDatabase = knexDatabase
-        this.redisCache = redisCache
-    }
+	constructor(knexDatabase, redisCache) {
+		this.knexDatabase = knexDatabase
+		this.redisCache = redisCache
+	}
 
-    updateCache(primaryValue, key) {
-        const primaryKey = this.knexDatabase.select("column_name").from("information_schema.key_column_usage").where("table_name", key.split(".")[0]).andWhere("constraint_name", "PRIMARY").first()
+	getPrimaryKey(key) {
+		return this.knexDatabase.keys.find(keyobj => keyobj.key === key).primaryKey
+	}
 
-        console.log('primary key of updateCache', primaryKey)
-        
-        const value = this.knexDatabase.select(key.split(".")[1]).from(key.split(".")[0]).where(primaryKey, primaryValue).first()
-        
-        console.log('value of updateCache', primaryKey)
+	updateCache(key, primaryValue) {
+		const primaryKey = this.getPrimaryKey(key)
 
-        return this.redisCache.set(key, value)
-    }
+		console.log('primary key of updateCache', primaryKey)
 
-    query(query, params) {
-        return this.knexDatabase.query(query, params)
-    }
+		const value = this.knexDatabase.select(key.split('.')[1]).from(key.split('.')[0]).where(primaryValue).first()
 
-    
-    get(primaryValue, key) {
-        if (this.exists(key)) return this.get(key)
-        return this.updateCache(key, primaryValue)
-    }
+		console.log('value of updateCache', primaryKey)
 
-    set(primaryValue, key, value) {
-        return
-    }
+		return this.redisCache.set(key, value)
+	}
 
-    delete(primaryValue, key) {
-        return
-    }
+	query(query, params) {
+		return this.knexDatabase.query(query, params)
+	}
 
-    validKey(key) {
-        return this.knexDatabase.keys.includes(key)
-    }
 
-    exists(primaryValue, key) {
-        if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key ${key}`.red)
-    }
+	get(keys) {
+		// eslint-disable-next-line no-async-promise-executor
+		return new Promise(async (resolve) => {
+			const result = {}
+			for (const key of keys) {
+				if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key ${key}`.red)
+				const value = await this.redisCache.get(key)
+				if (value) {
+					result[key] = value
+				}
+				else {
+					result[key] = await this.updateCache(key)
+				}
+			}
+			resolve(result)
+		})
+	}
 
-    async test() {
-        
-        const res = await this.get("characters_geral.*")
+	set(primaryValue, key, value) {
+		return
+	}
 
-        return res // { key: 'characters_geral.attributes', value: '["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]' }
+	delete(primaryValue, key) {
+		return
+	}
 
-    }
+	validKey(key) {
+		return this.knexDatabase.keys.includes(key)
+	}
+
+	exists(primaryValue, key) {
+	}
+
+	async test() {
+
+		const res = await this.get('characters_geral.*')
+
+		return res // { key: 'characters_geral.attributes', value: '["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]' }
+
+	}
 
 }
