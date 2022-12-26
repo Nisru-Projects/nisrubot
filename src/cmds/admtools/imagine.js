@@ -7,7 +7,7 @@ module.exports = class Command extends BaseCommand {
 		super(client, {
 			name: client.languages.content('commands.imagine.name'),
 			description: client.languages.content('commands.imagine.name'),
-			permissions: ['user'],
+			permissions: ['admin.tools.imagine'],
             options: [
                 {
                     name: 'prompt',

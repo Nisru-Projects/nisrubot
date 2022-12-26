@@ -66,11 +66,14 @@
                 "customizeOption": "Customização",
                 "race": "Raça",
                 "class": "Classe",
-                "name": "Nome"
+                "name": "Nome",
+                "random": "Aleatório",
+                "none": "Nenhum"
             },
             "charactersEmbed": {
                 "level": "Level {level}",
                 "title": "Menu de Personagens",
+                "creationtitle": "Criação de Personagem {currentpage}/{totalpages}",
                 "description": "{?has_character} Selecione um personagem para visualizar seus dados{?has_character}\n{!has_character} Você não possui nenhum personagem{!has_character}"
             },
             "charactersButtons": {
@@ -90,7 +93,8 @@
             },
             "creationCharacterStepDescription": {
                 "step0": "Escolha um nome e gênero para seu personagem",
-                "step1": "Escolha uma raça e classe para seu personagem"
+                "step1": "Escolha uma raça e classe para seu personagem",
+                "step2": "Escolha o elemento e a constelação para seu personagem"
             }
         },
         "ping": {

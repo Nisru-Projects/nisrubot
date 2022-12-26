@@ -1,10 +1,34 @@
 const BaseCommand = require("../../BaseCommand");
-const { ActionRowBuilder, ButtonStyle, ButtonBuilder, ComponentType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const { ActionRowBuilder, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const disableAllButtons = require("../../utils/disableAllButtons");
 const CharacterController = require("../../controllers/CharacterController");
 const { calculateLevel } = require("../../utils/levelingForms");
 const uppercaseFirstLetter = require("../../utils/uppercaseFirstLetter");
 const attributesUtils = require("../../utils/attributesUtils");
+
+const elements = [
+	{ name: "fire", value: "fire", emoji: "🔥", description: "Fire", selected: true },
+	{ name: "water", value: "water", emoji: "💧", description: "Water", selected: true },
+	{ name: "earth", value: "earth", emoji: "🌎", description: "Earth", selected: true },
+	{ name: "air", value: "air", emoji: "💨", description: "Air", selected: true },
+	{ name: "light", value: "light", emoji: "🌞", description: "Light", selected: true },
+	{ name: "dark", value: "dark", emoji: "🌑", description: "Dark", selected: true },
+];
+
+const constellations = [
+	{ name: "aquarius", value: "aquarius", emoji: "♒", description: "Aquarius", selected: true, blessings: ["water", "air"] },
+	{ name: "aries", value: "aries", emoji: "♈", description: "Aries", selected: true, blessings: ["fire", "air"] },
+	{ name: "cancer", value: "cancer", emoji: "♋", description: "Cancer", selected: true, blessings: ["water", "earth"] },
+	{ name: "capricorn", value: "capricorn", emoji: "♑", description: "Capricorn", selected: true, blessings: ["earth", "fire"] },
+	{ name: "gemini", value: "gemini", emoji: "♊", description: "Gemini", selected: true, blessings: ["air", "light"] },
+	{ name: "leo", value: "leo", emoji: "♌", description: "Leo", selected: true, blessings: ["fire", "light"] },
+	{ name: "libra", value: "libra", emoji: "♎", description: "Libra", selected: true, blessings: ["air", "dark"] },
+	{ name: "pisces", value: "pisces", emoji: "♓", description: "Pisces", selected: true, blessings: ["water", "dark"] },
+	{ name: "sagittarius", value: "sagittarius", emoji: "♐", description: "Sagittarius", selected: true, blessings: ["earth", "air"] },
+	{ name: "scorpio", value: "scorpio", emoji: "♏", description: "Scorpio", selected: true, blessings: ["water", "fire"] },
+	{ name: "taurus", value: "taurus", emoji: "♉", description: "Taurus", selected: true, blessings: ["earth", "water"] },
+	{ name: "virgo", value: "virgo", emoji: "♍", description: "Virgo", selected: true, blessings: ["earth", "dark"] },
+];
 
 const races = [
 	{ 
@@ -318,23 +342,37 @@ module.exports = class Command extends BaseCommand {
 			name: '',
 			active: false,
 			step: 0,
-			stepMax: 1,
-			character: {
-				name: '',
-				gender: 0,
-			},
+			stepMax: 2,
+			character: {},
+			possiblesConstellations: constellations.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * (5 - 2 + 1) + 2))
+		}
+
+		const validateCharacter = () => {
+			const stepsValidations = {
+				0: ['name', 'gender'],
+				1: ['race', 'class'],
+				2: ['element', 'constellation'],
+			}
+			const allValidations = Object.values(stepsValidations).flat()
+			return { stepsValidations, all: allValidations.map((validation) => action.character[validation]), step: stepsValidations[action.step].map((validation) => action.character[validation]) }
 		}
 		
 		const creationCharacter = async () => {
+
+			const showRequired = () => {
+				return validateCharacter().step.map((validation) => validation ? '✅' : '❌').join(' ')
+			}
+
 			const creationEmbed = {
 				color: 0x36393f,
-				title: LanguagesController.content("messages.characters.charactersEmbed.title") + ` ${action.step}/${action.stepMax}`,
+				title: LanguagesController.content("messages.characters.charactersEmbed.creationtitle", { currentpage: action.step+1, totalpages: action.stepMax+1 }),
 				timestamp: new Date().toISOString(),
-				description: `
-${LanguagesController.content(`messages.characters.creationCharacterStepDescription.step${action.step}`)}
-${action.character.baseAttributes ? `${LanguagesController.content(`attributes.attributesnoun`)}\n${Object.keys(action.character.baseAttributes).map((attribute) => `${LanguagesController.content(`attributes.${attribute}`)}: ${action.character.baseAttributes[attribute]}`).join('\n')}` : ''}
-`
+				description: ` ${showRequired()} __${LanguagesController.content(`messages.characters.creationCharacterStepDescription.step${action.step}`)}__`,
+				fields: []
 			}
+
+			if (action.character.baseAttributes) creationEmbed.fields.push({ name: LanguagesController.content(`attributes.attributesnoun`), value: Object.entries(action.character.baseAttributes).map((attribute) => `${attribute[0]}: ${attribute[1]}`).join('\n') })
+
 			const creationComponents = () => {
 				const components = [
 					new ActionRowBuilder().addComponents([
@@ -355,7 +393,7 @@ ${action.character.baseAttributes ? `${LanguagesController.content(`attributes.a
 							.setLabel(LanguagesController.content(`messages.characters.creationCharacterDefaults.confirm`, { option: `{%messages.characters.creationCharacterDefaults.${action.check.toLowerCase()}Option}` }))
 							.setEmoji('✅')
 							.setStyle(ButtonStyle.Success)
-							.setDisabled(true),
+							.setDisabled(validateCharacter().all.includes(false)),
 						new ButtonBuilder()
 							.setCustomId('cancel')
 							.setLabel(LanguagesController.content(`messages.characters.creationCharacterDefaults.cancel`, { option: `{%messages.characters.creationCharacterDefaults.${action.check.toLowerCase()}Option}` }))
@@ -368,7 +406,7 @@ ${action.character.baseAttributes ? `${LanguagesController.content(`attributes.a
 					components.push(new ActionRowBuilder().addComponents([
 						new ButtonBuilder()
 							.setCustomId('selectname')
-							.setLabel(LanguagesController.content(`messages.characters.charactersButtons.setname`, { character_name: action.character.name }))
+							.setLabel(LanguagesController.content(`messages.characters.charactersButtons.setname`, { character_name: action.character.name ?? '' }))
 							.setEmoji('📝')
 							.setStyle(ButtonStyle.Secondary)
 					]))
@@ -429,6 +467,67 @@ ${action.character.baseAttributes ? `${LanguagesController.content(`attributes.a
 					]))
 				}
 
+				if (action.step === 2) {
+					components.push(new ActionRowBuilder().addComponents([
+						new StringSelectMenuBuilder()
+							.setCustomId('selectelement')
+							.setPlaceholder(LanguagesController.content(`messages.characters.creationCharacterDefaults.select`, { option: `{%messages.characters.creationCharacterDefaults.element}` }))
+							.addOptions(elements.filter(element => element.selected).map((element) => {
+								return {
+									label: element.name,
+									value: element.value,
+									emoji: element.emoji,
+									description: element.description,
+									default: action.character.element === element.name
+								}
+							})).addOptions([
+								{
+									label: LanguagesController.content(`messages.characters.creationCharacterDefaults.random`),
+									value: "random",
+									emoji: '🎲',
+									default: action.character.element === "random"
+								},
+								{
+									label: LanguagesController.content(`messages.characters.creationCharacterDefaults.none`),
+									value: "none",
+									emoji: '❌',
+									default: action.character.element === "none"
+								}
+							])
+					]))
+
+					components.push(new ActionRowBuilder().addComponents([
+						new StringSelectMenuBuilder()
+							.setCustomId('selectconstellation')
+							.setPlaceholder(LanguagesController.content(`messages.characters.creationCharacterDefaults.select`, { option: `{%messages.characters.creationCharacterDefaults.constellation}` }))
+							.addOptions(action.possiblesConstellations.map((constellation) => {
+								return {
+									label: constellation.name,
+									value: constellation.value,
+									emoji: constellation.emoji,
+									description: constellation.description,
+									default: action.character.constellation === constellation.name
+								}
+							}))
+							.addOptions([
+								{
+									label: LanguagesController.content(`messages.characters.creationCharacterDefaults.random`),
+									value: "random",
+									emoji: '🎲',
+									default: action.character.constellation === "random"
+								},
+								{
+									label: LanguagesController.content(`messages.characters.creationCharacterDefaults.none`),
+									value: "none",
+									emoji: '❌',
+									default: action.character.constellation === "none"
+								}
+							])
+
+					]))
+
+				}
+
 				return components
 			}
 
@@ -442,12 +541,20 @@ ${action.character.baseAttributes ? `${LanguagesController.content(`attributes.a
 
 		collector.on('collect', async (i) => {
 
+			collector.resetTimer()
+
 			if (i.isStringSelectMenu()) {
 				i.deferUpdate().then(async () => {
 					action.character[i.customId.replace("select", "")] = i.values[0]
 					if (['selectrace', 'selectclass'].includes(i.customId)) {
-						action.character.baseAttributes = attributesUtils.mergeAttributes(races.find((race) => race.value == action.character.race)?.baseAttributes, classes.find((character_class) => character_class.value == action.character.class)?.baseAttributes)
+						const race_baseAttributes = races.find((race) => race.value == action.character.race)?.baseAttributes
+						const class_baseAttributes = classes.find((character_class) => character_class.value == action.character.class)?.baseAttributes
+						action.character.baseAttributes = attributesUtils.mergeAttributes([race_baseAttributes, class_baseAttributes])
 					}
+					if(i.customId == 'selectgender' && action.character.name) {
+						collector.emit('update_embed', i)
+					}
+					if (!validateCharacter().step.includes(undefined)) collector.emit('update_embed', i)
 				})
 			}
 
@@ -482,13 +589,12 @@ ${action.character.baseAttributes ? `${LanguagesController.content(`attributes.a
 						const chracter_name = submitted.fields.getTextInputValue('namemodal')
 						action.character.name = chracter_name
 						submitted.reply({ content: LanguagesController.content("messages.modals.character_name_modal.success", { character_name: chracter_name }), ephemeral: true })
-						return collector.emit('update_embed', i)
+						return action.character.gender ? collector.emit('update_embed', i) : null
 					}
 				})
 
 			}
 			i.deferUpdate().then(async () => {
-				collector.resetTimer()
 
 				if (action.check && ['confirm', 'cancel'].includes(i.customId)) return collector.emit('action', i)
 
