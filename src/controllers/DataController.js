@@ -8,7 +8,7 @@ module.exports = class DataController {
 		return this.knexDatabase.keys.find(keyobj => keyobj.key === key).primaryKey
 	}
 
-	updateCache(key, primaryValue) {
+	updateCache(primaryValue, key) {
 		const primaryKey = this.getPrimaryKey(key)
 
 		console.log('primary key of updateCache', primaryKey)
@@ -59,11 +59,8 @@ module.exports = class DataController {
 	}
 
 	async test() {
-
 		const res = await this.get('characters_geral.*')
-
-		return res // { key: 'characters_geral.attributes', value: '["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]' }
-
+		return res
 	}
 
 }

@@ -6,8 +6,7 @@ const DatabaseManager = require('./managers/DatabaseManager')
 const LanguagesController = require('./controllers/LanguagesController')
 const CacheManager = require('./managers/CacheManager')
 const { createClient } = require('redis')
-const redisClient = createClient()
-redisClient.on('error', (err) => console.log('Redis Client Error', err))
+const redisClient = createClient({ url: 'redis://localhost:6379' })
 
 module.exports = class NisruClient extends Client {
 
@@ -27,6 +26,13 @@ module.exports = class NisruClient extends Client {
 		const Database = new DatabaseManager(options)
 		Database.loadData(this)
 		this.redisCache = new CacheManager(redisClient)
+		this.redisCache.connect().then (() => {
+			console.log('[REDIS] Connected'.green)
+		}).catch(err => {
+			console.log(`[REDIS] Not connected: ${err.message}`.red)
+			this.redisCache = null
+		})
+
 	}
 
 	verification(options) {
