@@ -21,8 +21,7 @@ module.exports = class DatabaseManager {
 		knex.raw('select 1+1 as result').then(() => {
 			client.emit('databaseConnected', client)
 		}).catch(err => {
-			console.log('[DATABASE] Not connected'.red)
-			console.log(err.message)
+			console.log(`[DATABASE] Not connected: ${err.message}`.red)
 			process.exit(1)
 		})
 

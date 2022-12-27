@@ -127,4 +127,3 @@ dist
 .pnp.*
 config.json
 yarn.lock
-package-lock.json
