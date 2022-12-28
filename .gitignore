@@ -128,3 +128,4 @@ dist
 config.json
 docker-compose.yml
 yarn.lock
+postgres
