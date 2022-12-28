@@ -12,5 +12,4 @@ RUN apk add --no-cache \
         giflib-dev
 RUN npm install
 COPY . .
-EXPOSE 3000
 CMD ["npm", "start"]
