@@ -407,6 +407,11 @@ module.exports = class Command extends BaseCommand {
 							.setLabel(LanguagesController.content('messages.characters.charactersButtons.setname', { character_name: action.character.name ?? '' }))
 							.setEmoji('📝')
 							.setStyle(ButtonStyle.Secondary),
+						new ButtonBuilder()
+							.setCustomId('selectskin')
+							.setLabel(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%messages.characters.creationCharacterDefaults.skinOption}' }))
+							.setEmoji('📝')
+							.setStyle(ButtonStyle.Secondary),
 					]))
 					components.push(new ActionRowBuilder().addComponents([
 						new StringSelectMenuBuilder()
