@@ -9,7 +9,7 @@ module.exports = (client) => {
 		const commands = readdirSync(`./src/cmds/${category}`)
 		commands.filter(file => !file.includes('!') && file.endsWith('.js')).forEach(file => {
 
-			const Command = require('../cmds/' + category + '/' + file.replace('.js', ''))
+			const Command = require(`../cmds/${category}/${file.replace('.js', '')}`)
 
 			const cmd = new Command(client)
 

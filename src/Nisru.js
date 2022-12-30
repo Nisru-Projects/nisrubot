@@ -6,7 +6,7 @@ const DatabaseManager = require('./managers/DatabaseManager')
 const LanguagesController = require('./controllers/LanguagesController')
 const CacheManager = require('./managers/CacheManager')
 const { createClient } = require('redis')
-const redisClient = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` })
+const redisClient = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:6379` })
 
 module.exports = class NisruClient extends Client {
 
@@ -38,7 +38,7 @@ module.exports = class NisruClient extends Client {
 	verification(options) {
 		if (!options.BOT_TOKEN) {
 			console.log('[ERRO] Uninformed token'.red)
-			return
+			return process.exit(1)
 		}
 		this.token = options.BOT_TOKEN
 		this.config = options
