@@ -13,6 +13,10 @@
         "imagine": {
             "name": "imagine",
             "description": "Utilize a sua criatividade com a OpenAI"
+        },
+        "test": {
+            "name": "test",
+            "description": "Test a test"
         }
     },
     "races": {
