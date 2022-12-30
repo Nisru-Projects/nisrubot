@@ -18,6 +18,7 @@ module.exports = class NisruClient extends Client {
 		})
 
 		console.log(' ')
+		eventsHandler(this)
 		const Database = new DatabaseManager(options)
 		Database.loadData(this)
 		this.redisCache = new CacheManager(redisClient)
@@ -30,7 +31,6 @@ module.exports = class NisruClient extends Client {
 		this.verification(options)
 		emeraldHandler(this).then(() => {
 			commandHandler(this)
-			eventsHandler(this)
 		})
 
 	}
