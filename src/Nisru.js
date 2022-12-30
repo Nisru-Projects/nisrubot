@@ -27,7 +27,7 @@ module.exports = class NisruClient extends Client {
 		Database.loadData(this)
 		this.redisCache = new CacheManager(redisClient)
 		this.redisCache.connect().then (() => {
-			console.log('[REDIS] Connected'.green)
+			this.emit('redisConnected', this)
 		}).catch(err => {
 			console.log(`[REDIS] Not connected: ${err.message}`.red)
 			this.redisCache = null
