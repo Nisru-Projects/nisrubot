@@ -1,5 +1,6 @@
 {
     "mode": "development",
+    "emeraldtoken": "",
     "development": {
         "BOT_TOKEN": "",
         "DB_HOST": "",

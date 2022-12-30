@@ -1,6 +1,6 @@
 module.exports = class DatabaseManager {
 	constructor(options) {
-		this.options = options
+		this.options = options[options.mode]
 	}
 
 	loadData(client, options = this.options) {

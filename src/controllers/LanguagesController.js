@@ -1,5 +1,3 @@
-const fs = require('fs')
-const path = require('path')
 module.exports = class LanguagesController {
 	constructor(lang) {
 		this.lang = lang || 'pt-BR'
@@ -13,29 +11,16 @@ module.exports = class LanguagesController {
 		return this[lang]
 	}
 
-	load(folder = './resources/languages') {
-		if (!fs.existsSync(folder)) {
-			console.log(`[LANGUAGE] The folder ${folder} does not exist`.red)
-			return process.exit(1)
-		}
-		const files = fs.readdirSync(path.resolve(folder))
-		files.forEach(file => {
-			const lang = require(path.resolve(folder, file))
-			this.set(lang.name, lang)
-			if (files.length === 1) {
-				this.lang = lang.name
-			}
-		})
-		if (files.length === 0) {
-			console.log(`[LANGUAGE] No languages found in the folder ${folder}`.red)
-			return process.exit(1)
-		}
-		console.log(`[LANGUAGE] Loaded ${files.length} languages`.green)
+	add(lang) {
+		this.set(lang.name, lang)
 	}
 
 	content(key, vars, lang = this.lang) {
 		try {
-			if (!this.get(lang)) return 'Language not found'
+			if (!this.get(lang)) {
+				console.log(`[LANGUAGE] Language ${lang} not found`.red)
+				return process.exit(1)
+			}
 			let contentkey = this.get(lang)
 
 			const keyify = key.split('.')

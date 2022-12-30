@@ -1,7 +1,6 @@
 module.exports = {
 	name: 'redisConnected',
-	execute: async (client) => {
+	execute: async () => {
 		console.log('[REDIS] Connected'.green)
-		require('../handlers/imageHandler')(client)
 	},
 }
