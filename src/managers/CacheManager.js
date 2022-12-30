@@ -3,6 +3,10 @@ module.exports = class CacheManager {
 		this.client = client
 	}
 
+	get isConnected() {
+		return this.client.connected
+	}
+
 	connect() {
 		return this.client.connect()
 	}

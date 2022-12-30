@@ -18,7 +18,25 @@ module.exports = class MiddlewareController {
 	async checkPermissions(cmdPermissions) {
 		const user = this.user || await this.client.db.select('*').from('users').where('discord_id', this.interaction.user.id).first()
 		const userPermissions = user.permissions
-		return cmdPermissions.every(perm => userPermissions.includes(perm)) || userPermissions.includes('*')
+
+		const allOrEvery = cmdPermissions.every(perm => userPermissions.includes(perm)) || userPermissions.includes('*')
+
+		if (allOrEvery) return true
+
+		const userPermissionsArray = userPermissions.map(perm => perm.split('.'))
+		const cmdPermissionsArray = cmdPermissions.map(perm => perm.split('.'))
+		const userPermissionsArrayLength = userPermissionsArray.length
+		const cmdPermissionsArrayLength = cmdPermissionsArray.length
+
+		for (let i = 0; i < userPermissionsArrayLength; i++) {
+			for (let j = 0; j < cmdPermissionsArrayLength; j++) {
+				if (userPermissionsArray[i][0] === cmdPermissionsArray[j][0] && userPermissionsArray[i][1] === '*' && cmdPermissionsArray[j][1] !== '*') {
+					return true
+				}
+			}
+		}
+
+		return false
 	}
 
 	async getCharacters() {
