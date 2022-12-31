@@ -34,7 +34,7 @@ module.exports = class LanguagesController {
 			if (!contentkey) {
 				throw new Error('Key not found')
 			}
-			return this.read(contentkey, vars)
+			return this.read(contentkey, vars, lang)
 		}
 		catch (error) {
 			console.log(`[LANGUAGE] An error occurred while trying to get the content of the key ${key} in the language ${lang}\nERROR MESSAGE: ${error.message}`.red)
@@ -42,7 +42,7 @@ module.exports = class LanguagesController {
 		}
 	}
 
-	read(message, vars) {
+	read(message, vars, lang) {
 		if (!vars) vars = {}
 		for (const key in vars) {
 			if (typeof vars[key] === 'boolean') {
@@ -59,7 +59,7 @@ module.exports = class LanguagesController {
 			}
 			if (typeof vars[key] === 'string' && vars[key].startsWith('{%') && vars[key].endsWith('}')) {
 				const keyify = vars[key].replace('{%', '').replace('}', '').split('.')
-				let contentkey = this.get(this.lang)
+				let contentkey = this.get(lang)
 				keyify.forEach(k => {
 					contentkey = contentkey[k]
 				})

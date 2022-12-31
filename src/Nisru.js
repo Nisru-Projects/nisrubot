@@ -1,6 +1,5 @@
 const { GatewayIntentBits, Client } = require('discord.js')
 
-const commandHandler = require('./handlers/commandHandler')
 const eventsHandler = require('./handlers/eventsHandler')
 const emeraldHandler = require('./handlers/emeraldHandler')
 const DatabaseManager = require('./managers/DatabaseManager')
@@ -21,17 +20,11 @@ module.exports = class NisruClient extends Client {
 		eventsHandler(this)
 		const Database = new DatabaseManager(options)
 		Database.loadData(this)
-		this.redisCache = new CacheManager(redisClient)
-		this.redisCache.connect().then(() => {
-			this.emit('redisConnected', this)
-		}).catch(err => {
-			console.log(`[REDIS] Not connected: ${err.message}`.red)
-			this.redisCache = null
-		})
+		const RedisCache = new CacheManager(redisClient)
+		RedisCache.loadData(this)
+
 		this.verification(options)
-		emeraldHandler(this).then(() => {
-			commandHandler(this)
-		})
+		emeraldHandler(this)
 
 	}
 

@@ -1,5 +1,7 @@
 const BaseCommand = require('../../BaseCommand')
 
+const DataController = require('../../controllers/DataController')
+
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
@@ -13,13 +15,13 @@ module.exports = class Command extends BaseCommand {
 
 		console.time('test')
 
-		const EmeraldManager = require('../../managers/EmeraldManager')
-		const emeraldManager = new EmeraldManager(this.client.config.emeraldtoken)
-		emeraldManager.getContent('nisruemerald', 'resources').then(res => {
-			console.log(res.data)
-		}).catch(err => {
-			console.log(err)
-		})
+		const dataController = new DataController(this.client.knexDatabase, this.client.redisCache)
+
+		await dataController.benchmark(interaction.user.id)
+
+		console.timeEnd('test')
+
+		return interaction.reply({ content: 'Teste concluído', ephemeral: true })
 
 	}
 }

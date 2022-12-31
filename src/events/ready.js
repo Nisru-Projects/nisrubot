@@ -1,8 +1,12 @@
+const commandHandler = require('../handlers/commandHandler')
+
 module.exports = {
 
 	name: 'ready',
 	once: true,
 	execute: async (client) => {
+
+		commandHandler(client)
 
 		// client.application.commands.set([]);
 

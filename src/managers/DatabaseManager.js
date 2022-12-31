@@ -25,7 +25,7 @@ module.exports = class DatabaseManager {
 			process.exit(1)
 		})
 
-		client.db = knex
+		client.knexDatabase = knex
 
 	}
 

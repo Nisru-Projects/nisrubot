@@ -16,7 +16,7 @@ module.exports = (client) => {
 			cmd.category = category
 			cmd.fileName = file
 
-			if (!file.includes('!')) commandsCollection.set(cmd.name, cmd)
+			commandsCollection.set(cmd.name, cmd)
 
 		})
 	})
