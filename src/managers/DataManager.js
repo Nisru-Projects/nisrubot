@@ -1,4 +1,4 @@
-module.exports = class DataController {
+module.exports = class DataManager {
 	constructor(knexDatabase, redisCache) {
 		this.knexDatabase = knexDatabase
 		this.redisCache = redisCache
@@ -11,7 +11,7 @@ module.exports = class DataController {
 	updateCache(primaryValue, key) {
 		return new Promise(async (resolve) => {
 			const primaryKey = this.getPrimaryKey(key)
-			const query = `SELECT * FROM ${key.split('.')[0]} WHERE ${primaryKey} = ?`
+			const query = `SELECT ${key.split('.')[1]} FROM ${key.split('.')[0]} WHERE ${primaryKey} = ?`
 			const result = await this.query(query, [primaryValue])
 			if (result.rows.length > 0) {
 				this.redisCache.set(`${key}:${primaryValue}`, JSON.stringify(result.rows[0]), 60 * 60 * 5)
@@ -66,16 +66,21 @@ module.exports = class DataController {
 			return new Promise(async (resolve) => {
 				const result = {}
 				for (const key of keys) {
-					console.log(`[DATABASE] Checking cache for ${key}:${primaryValue}:${forcecache}`)
 					const cached = await this.hasCache(primaryValue, key)
 					if (forcecache || !cached) {
-						console.log(`[DATABASE] Cached ${key}:${primaryValue}`)
 						result[key] = await this.updateCache(primaryValue, key)
 					}
 					else {
 						result[key] = await this.getFromCache(primaryValue, key)
 					}
 				}
+
+				for (const key of keys) {
+					if (!key.endsWith('.*')) {
+						result[key] = result[key][key.split('.')[1]]
+					}
+				}
+
 				resolve(result)
 			})
 		}

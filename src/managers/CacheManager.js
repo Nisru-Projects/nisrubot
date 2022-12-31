@@ -5,12 +5,15 @@ module.exports = class CacheManager {
 	}
 
 	loadData() {
+		this.client.redisCache = this
 		this.connect().then(() => {
 			this.isConnected = true
 			this.client.emit('redisConnected', this)
 		}).catch(err => {
 			console.log(`[REDIS] Not connected: ${err.message}`.red)
 		})
+
+		return this
 	}
 
 	get isConnected() {

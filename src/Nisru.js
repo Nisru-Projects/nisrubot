@@ -1,11 +1,11 @@
 const { GatewayIntentBits, Client } = require('discord.js')
 
 const eventsHandler = require('./handlers/eventsHandler')
-const emeraldHandler = require('./handlers/emeraldHandler')
 const DatabaseManager = require('./managers/DatabaseManager')
 const CacheManager = require('./managers/CacheManager')
 const { createClient } = require('redis')
 const redisClient = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:6379` })
+const DataManager = require('./managers/DataManager')
 
 module.exports = class NisruClient extends Client {
 
@@ -18,13 +18,13 @@ module.exports = class NisruClient extends Client {
 
 		console.log(' ')
 		eventsHandler(this)
+
 		const Database = new DatabaseManager(options)
-		Database.loadData(this)
 		const RedisCache = new CacheManager(redisClient)
-		RedisCache.loadData(this)
+
+		this.dataManager = new DataManager(Database.loadData(this), RedisCache.loadData(this))
 
 		this.verification(options)
-		emeraldHandler(this)
 
 	}
 

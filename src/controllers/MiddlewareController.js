@@ -5,19 +5,23 @@ module.exports = class MiddlewareController {
 	}
 
 	async checkUser() {
-		if (!await this.client.knexDatabase.select('*').from('users').where('discord_id', this.interaction.user.id).first()) {
-			await this.client.knexDatabase('users').insert({
-				discord_id: this.interaction.user.id,
-			}).then(async () => {
-				this.user = await this.client.knexDatabase.select('*').from('users').where('discord_id', this.interaction.user.id).first()
-				console.log(`[DATABASE] User ${this.interaction.user.id} created`.green)
-			})
-		}
+		this.client.dataController.get(this.interaction.user.id, 'users.*').then(async (user) => {
+			if (!user) {
+				await this.client.knexDatabase('users').insert({
+					discord_id: this.interaction.user.id,
+				}).then(async () => {
+					this.user = await this.client.knexDatabase.select('*').from('users').where('discord_id', this.interaction.user.id).first()
+					console.log(`[DATABASE] User ${this.interaction.user.id} created`.green)
+				})
+			}
+		})
 	}
 
 	async checkPermissions(cmdPermissions) {
-		const user = this.user || await this.client.knexDatabase.select('*').from('users').where('discord_id', this.interaction.user.id).first()
-		const userPermissions = user.permissions
+
+		const user_data = await this.client.dataManager.get(this.interaction.user.id, ['users.permissions'], true)
+
+		const userPermissions = user_data['users.permissions']
 
 		const allOrEvery = cmdPermissions.every(perm => userPermissions.includes(perm)) || userPermissions.includes('*')
 

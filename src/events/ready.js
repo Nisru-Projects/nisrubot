@@ -1,10 +1,13 @@
 const commandHandler = require('../handlers/commandHandler')
+const emeraldHandler = require('../handlers/emeraldHandler')
 
 module.exports = {
 
 	name: 'ready',
 	once: true,
 	execute: async (client) => {
+
+		await emeraldHandler(client)
 
 		commandHandler(client)
 
@@ -19,7 +22,6 @@ module.exports = {
 		})
 
 		client.guilds.cache.forEach(guild => {
-			// checar se já tem os comandos
 			guild.commands.set(commands)
 		})
 

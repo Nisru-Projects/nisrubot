@@ -1,6 +1,6 @@
 const BaseCommand = require('../../BaseCommand')
 
-const DataController = require('../../controllers/DataController')
+const DataManager = require('../../managers/DataManager')
 
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
@@ -15,9 +15,9 @@ module.exports = class Command extends BaseCommand {
 
 		console.time('test')
 
-		const dataController = new DataController(this.client.knexDatabase, this.client.redisCache)
+		const dataManager = new DataManager(this.client.knexDatabase, this.client.redisCache)
 
-		await dataController.benchmark(interaction.user.id)
+		await dataManager.benchmark(interaction.user.id)
 
 		console.timeEnd('test')
 

@@ -24,26 +24,27 @@ constellation: TEXT
 }
 */
 
-const DataController = require('./DataController')
-
 module.exports = class CharacterController {
 	constructor(client, user) {
 		this.client = client
 		this.user = user
-		this.DataController = new DataController(client.knexDatabase, client.cache)
 	}
 
 	getCharacterInfo(character_id, table) {
-		return this.DataController.get(character_id, `${table}.*`)
+		return this.client.datController.get(character_id, `${table}.*`)
 	}
 
 	async getCharacters() {
-		const user_data = await this.client.knexDatabase.select('characters', 'selected_character').from('users').where('discord_id', this.user.id).first()
+
+		const user_data = await this.client.dataManager.get(this.user.id, 'users', ['selected_character', 'characters'])
+
 		this.characters = {
 			selected_character: user_data.characters == null ? undefined : user_data.selected_character,
 			characters: user_data.characters == null ? [] : user_data.characters,
 		}
+
 		return this.characters
+
 	}
 
 	async createCharacter(data) {
