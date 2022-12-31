@@ -407,11 +407,6 @@ module.exports = class Command extends BaseCommand {
 							.setLabel(LanguagesController.content('messages.characters.charactersButtons.setname', { character_name: action.character.name ?? '' }))
 							.setEmoji('📝')
 							.setStyle(ButtonStyle.Secondary),
-						new ButtonBuilder()
-							.setCustomId('selectskin')
-							.setLabel(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%messages.characters.creationCharacterDefaults.skinOption}' }))
-							.setEmoji('📝')
-							.setStyle(ButtonStyle.Secondary),
 					]))
 					components.push(new ActionRowBuilder().addComponents([
 						new StringSelectMenuBuilder()
@@ -469,7 +464,6 @@ module.exports = class Command extends BaseCommand {
 							})),
 					]))
 				}
-
 				if (action.step === 2) {
 					components.push(new ActionRowBuilder().addComponents([
 						new StringSelectMenuBuilder()
@@ -534,12 +528,16 @@ module.exports = class Command extends BaseCommand {
 				return components
 			}
 
+			if (action.concluded) {
+				creationEmbed.description = LanguagesController.content('messages.characters.charactersEmbed.descriptionconclued', { character_name: action.character.name })
+			}
+
 			return { creationEmbed, creationComponents }
 		}
 
 		collector.on('update_embed', async (i) => {
 			const { creationEmbed, creationComponents } = await creationCharacter()
-			return i.editReply({ embeds: [creationEmbed], components: creationComponents() })
+			return i.editReply({ embeds: [creationEmbed], components: action.concluded ? [] : creationComponents() })
 		})
 
 		collector.on('collect', async (i) => {
@@ -592,15 +590,25 @@ module.exports = class Command extends BaseCommand {
 					if (submitted) {
 						const chracter_name = submitted.fields.getTextInputValue('namemodal')
 						action.character.name = chracter_name
+
+						// Checar se já tem um personagem com esse nome, em characters_geral, coluna essence (um json) e verificar se o nome é igual ao que o usuário digitou
+						const query = 'SELECT * FROM characters_geral WHERE essence->>\'name\' = ?'
+						const exists = await this.client.dataManager.query(query, [chracter_name])
+						console.log('checkexistsname: ', exists)
+						if (exists.rows.length > 0) {
+							return submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.exists', { character_name: chracter_name }), ephemeral: true })
+						}
+
 						submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.success', { character_name: chracter_name }), ephemeral: true })
 						return action.character.gender ? collector.emit('update_embed', i) : null
 					}
 				})
 
 			}
+
 			i.deferUpdate().then(async () => {
 
-				if (action.check && ['confirm', 'cancel'].includes(i.customId)) return collector.emit('action', i)
+				if (action.check && ['confirm', 'cancel', 'confirmcreation'].includes(i.customId)) return collector.emit('action', i)
 
 				if (action.active) return collector.emit('step', i)
 
@@ -636,6 +644,12 @@ module.exports = class Command extends BaseCommand {
 				action.active = true
 				collector.emit('update_embed', i)
 			}
+			if (i.customId === 'confirmcreation') {
+				action.concluded = true
+				Character.create(action.character)
+				collector.emit('update_embed', i)
+				collector.stop()
+			}
 			else if (action.check === 'Create' && i.customId === 'cancel') {
 				collector.stop()
 			}
@@ -643,6 +657,7 @@ module.exports = class Command extends BaseCommand {
 		})
 
 		collector.on('end', async () => {
+			if (action.concluded) return
 			disableAllButtons(charactersMsg)
 		})
 

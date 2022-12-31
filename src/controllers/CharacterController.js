@@ -31,12 +31,12 @@ module.exports = class CharacterController {
 	}
 
 	getCharacterInfo(character_id, table) {
-		return this.client.datController.get(character_id, `${table}.*`)
+		return this.client.dataManager.get(character_id, `${table}.*`)
 	}
 
 	async getCharacters() {
 
-		const user_data = await this.client.dataManager.get(this.user.id, 'users', ['selected_character', 'characters'])
+		const user_data = await this.client.dataManager.get(this.user.id, ['users.selected_character', 'users.characters'])
 
 		this.characters = {
 			selected_character: user_data.characters == null ? undefined : user_data.selected_character,
@@ -47,12 +47,12 @@ module.exports = class CharacterController {
 
 	}
 
-	async createCharacter(data) {
-
+	async create(data) {
 		let character_id = randomString(16)
 
-		while (await this.client.dataManager.get(character_id, 'characters_geral')) {
+		while ((await this.client.dataManager.get(character_id, 'characters_geral'))['characters_geral.*'] != null) {
 			character_id = randomString(16)
+			console.log('character id2', character_id)
 		}
 
 		data.character_id = character_id
