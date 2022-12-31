@@ -1,27 +1,18 @@
 module.exports = class CacheManager {
 	constructor(client) {
 		this.client = client
-		this.connected = false
 	}
 
 	loadData() {
 		this.client.redisCache = this
 		this.connect().then(() => {
-			this.isConnected = true
 			console.log('[REDIS] Connected'.green)
 		}).catch(err => {
 			console.log(`[REDIS] Not connected: ${err.message}`.red)
+			process.exit(1)
 		})
 
 		return this
-	}
-
-	get isConnected() {
-		return this.connected
-	}
-
-	set isConnected(value) {
-		this.connected = value
 	}
 
 	connect() {

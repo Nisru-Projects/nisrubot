@@ -30,7 +30,7 @@ module.exports = class NisruClient extends Client {
 
 	verification(options) {
 		if (!options[options.mode].BOT_TOKEN) {
-			console.log('[ERRO] Uninformed token'.red)
+			console.log('[ERROR] Token not found'.red)
 			return process.exit(1)
 		}
 		this.token = options[options.mode].BOT_TOKEN

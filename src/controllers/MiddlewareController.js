@@ -5,7 +5,7 @@ module.exports = class MiddlewareController {
 	}
 
 	async checkUser() {
-		this.client.dataController.get(this.interaction.user.id, 'users.*').then(async (user) => {
+		this.client.dataManager.get(this.interaction.user.id, 'users.*').then(async (user) => {
 			if (!user) {
 				await this.client.knexDatabase('users').insert({
 					discord_id: this.interaction.user.id,

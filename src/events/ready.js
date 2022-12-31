@@ -29,25 +29,15 @@ module.exports = {
 
 		process.on('unhandledRejection', (reason, promise) => {
 			console.log('Unhandled Rejection at:', promise, 'reason:', reason)
-		},
-		)
+		})
 
 		process.on('uncaughtException', (err, origin) => {
 			console.log('Uncaught Exception at:', origin, 'error:', err)
-		},
-		)
-
-		process.on('warning', (warning) => {
-			console.log(warning.name)
-			console.log(warning.message)
-			console.log(warning.stack)
-		},
-		)
+		})
 
 		process.on('exit', (code) => {
 			console.log(`About to exit with code: ${code}`)
-		},
-		)
+		})
 
 	},
 
