@@ -8,7 +8,12 @@ module.exports = class DataManager {
 		return this.knexDatabase.keys.find(keyobj => keyobj.key === key).primaryKey
 	}
 
-	updateCache(primaryValue, key) {
+	updateCache(primaryValue, key, value) {
+
+		if (value) {
+			return this.redisCache.set(`${key}:${primaryValue}`, JSON.stringify(value), 60 * 60 * 5)
+		}
+
 		return new Promise(async (resolve) => {
 			const primaryKey = this.getPrimaryKey(key)
 			const query = `SELECT ${key.split('.')[1]} FROM ${key.split('.')[0]} WHERE ${primaryKey} = ?`
@@ -103,14 +108,44 @@ module.exports = class DataManager {
 		}
 	}
 
-	set(primaryValue, key, value) {
-		return new Promise(async (resolve) => {
-			const primaryKey = this.getPrimaryKey(key)
-			const query = `UPDATE ${key.split('.')[0]} SET ? WHERE ${primaryKey} = ?`
-			await this.query(query, [value, primaryValue])
-			await this.updateCache(primaryValue, key)
-			resolve()
+	set(primaryValue, keys, values) {
+
+		if (typeof keys === 'string') keys = [keys]
+		if (typeof values === 'string') values = [values]
+
+		keys = keys.map(key => {
+			if (!key.includes('.')) return `${key}.*`
+			else return key
 		})
+
+		const tables = keys.map(key => key.split('.')[0])
+		const uniqueTables = [...new Set(tables)]
+
+		if (uniqueTables.length === 1) {
+			return new Promise(async (resolve) => {
+				const table = uniqueTables[0]
+				const primaryKey = this.getPrimaryKey(`${table}.*`)
+				const query = `UPDATE ${table} SET ${keys.map(key => `${key.split('.')[1]} = ?`).join(', ')} WHERE ${primaryKey} = ?`
+				await this.query(query, [...values, primaryValue])
+				for (const key of keys) {
+					this.updateCache(primaryValue, key)
+				}
+				resolve()
+			})
+		}
+		else {
+			return new Promise(async (resolve) => {
+				for (let i = 0; i < keys.length; i++) {
+					const key = keys[i]
+					const value = values[i]
+					const table = key.split('.')[0]
+					const query = `UPDATE ${table} SET ${key.split('.')[1]} = ? WHERE ${this.getPrimaryKey(`${table}.*`)} = ?`
+					await this.query(query, [value, primaryValue])
+					this.updateCache(primaryValue, key)
+				}
+				resolve()
+			})
+		}
 	}
 
 	delete(primaryValue, key) {

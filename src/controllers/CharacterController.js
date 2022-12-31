@@ -48,21 +48,16 @@ module.exports = class CharacterController {
 	}
 
 	async createCharacter(data) {
+
 		let character_id = randomString(16)
 
-		while (await this.client.knexDatabase.select('character_id').from('characters_geral').where('character_id', character_id).first()) {
+		while (await this.client.dataManager.get(character_id, 'characters_geral')) {
 			character_id = randomString(16)
 		}
 
 		data.character_id = character_id
 
-		await this.client.knexDatabase('users').where('discord_id', this.user.id).update({
-
-			characters: this.client.knexDatabase.raw('array_append(characters, ?)', [character_id]),
-			selected_character: character_id,
-		})
-
-		return await this.client.knexDatabase('characters_geral').insert(data)
+		console.log('data character id', data)
 	}
 
 	deleteCharacter(character_id) {

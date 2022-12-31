@@ -8,7 +8,7 @@ module.exports = class CacheManager {
 		this.client.redisCache = this
 		this.connect().then(() => {
 			this.isConnected = true
-			this.client.emit('redisConnected', this)
+			console.log('[REDIS] Connected'.green)
 		}).catch(err => {
 			console.log(`[REDIS] Not connected: ${err.message}`.red)
 		})
