@@ -126,7 +126,7 @@ module.exports = class Command extends BaseCommand {
 		const ActionController = new ActionsController(this.client.redisCache)
 
 		if (await ActionController.inAction(interaction.user.id, 'characters_command')) {
-			return interaction.reply({ content: this.client.languages.content('messages.characters.charactersCommandCooldown'), ephemeral: true })
+			return interaction.reply({ content: this.client.languages.content('messages.actions.characters_command_already'), ephemeral: true })
 		}
 
 		await ActionController.addAction(interaction.user.id, { id: 'characters_command', duration: 60 * 12 })
@@ -547,6 +547,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 
 			if (action.check === 'Create' && i.customId === 'confirm') {
 				action.active = true
+				if (await ActionController.inAction(i.user.id, 'create_character')) return i.reply({ content: LanguagesController.content('messages.actions.create_character_already'), ephemeral: true })
 				ActionController.addAction(i.user.id, { id: 'create_character', duration: 60 * 10 })
 				collector.emit('update_embed', i)
 			}
