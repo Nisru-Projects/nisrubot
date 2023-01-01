@@ -5,16 +5,11 @@ module.exports = class MiddlewareController {
 	}
 
 	async checkUser() {
-		this.client.dataManager.get(this.interaction.user.id, 'users.*').then(async (user) => {
-			if (!user) {
-				await this.client.knexDatabase('users').insert({
-					discord_id: this.interaction.user.id,
-				}).then(async () => {
-					this.user = await this.client.knexDatabase.select('*').from('users').where('discord_id', this.interaction.user.id).first()
-					console.log(`[DATABASE] User ${this.interaction.user.id} created`.green)
-				})
-			}
-		})
+		const user = await this.client.dataManager.get(this.interaction.user.id, ['users.*'], true)
+
+		if (user['users.*'] == null) {
+			await this.client.dataManager.query(`INSERT INTO users (discord_id) VALUES ('${this.interaction.user.id}')`)
+		}
 	}
 
 	async checkPermissions(cmdPermissions) {
@@ -44,7 +39,7 @@ module.exports = class MiddlewareController {
 	}
 
 	async getCharacters() {
-		const user = this.user || await this.client.knexDatabase.select('characters', 'selected_character').from('users').where('discord_id', this.interaction.user.id).first()
+		const user = await this.client.knexDatabase.select('characters', 'selected_character').from('users').where('discord_id', this.interaction.user.id).first()
 		return {
 			selected_character: user.characters == null ? undefined : user.selected_character,
 			characters: user.characters == null ? [] : user.characters,

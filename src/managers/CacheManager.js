@@ -1,12 +1,13 @@
+const { createClient } = require('redis')
+const redisClient = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:6379` })
 module.exports = class CacheManager {
-	constructor(client) {
-		this.client = client
-	}
-
-	loadData() {
-		this.client.redisCache = this
+	loadData(client) {
+		client.redisCache = this
 		this.connect().then(() => {
 			console.log('[REDIS] Connected'.green)
+			this.clearWithPrefix('actions:').then(() => {
+				console.log('[REDIS] Actions cleared'.green)
+			})
 		}).catch(err => {
 			console.log(`[REDIS] Not connected: ${err.message}`.red)
 			process.exit(1)
@@ -16,34 +17,41 @@ module.exports = class CacheManager {
 	}
 
 	connect() {
-		return this.client.connect()
+		return redisClient.connect()
+	}
+
+	async clearWithPrefix(prefix) {
+		const keys = await redisClient.keys(`${prefix}*`)
+		if (keys.length) {
+			return redisClient.del(keys)
+		}
 	}
 
 	clear() {
-		return this.client.flushall()
+		return redisClient.flushAll()
 	}
 
 	set(key, value, expiration_time) {
 
 		if (expiration_time) {
-			return this.client.set(key, value, 'EX', expiration_time)
+			return redisClient.set(key, value, 'EX', expiration_time)
 		}
-		return this.client.set(key, value)
+		return redisClient.set(key, value)
 	}
 
 	add(key, value) {
-		return this.client.add(key, value)
+		return redisClient.add(key, value)
 	}
 
 	get(key) {
-		return this.client.get(key)
+		return redisClient.get(key)
 	}
 
 	delete(key) {
-		return this.client.del(key)
+		return redisClient.del(key)
 	}
 
 	exists(key) {
-		return this.client.exists(key)
+		return redisClient.exists(key)
 	}
 }

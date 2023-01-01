@@ -2,9 +2,9 @@ const BaseCommand = require('../../BaseCommand')
 const { ActionRowBuilder, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js')
 const disableAllButtons = require('../../utils/disableAllButtons')
 const CharacterController = require('../../controllers/CharacterController')
+const ActionsController = require('../../controllers/ActionsController')
 const { calculateLevel } = require('../../utils/levelingForms')
 const uppercaseFirstLetter = require('../../utils/uppercaseFirstLetter')
-const attributesUtils = require('../../utils/attributesUtils')
 
 const elements = [
 	{ name: 'fire', value: 'fire', emoji: '🔥', description: 'Fire', selected: true },
@@ -113,137 +113,6 @@ const races = [
 	},
 ]
 
-const classes = [
-	{
-		name: 'warrior',
-		value: 'warrior',
-		emoji: '⚔️',
-		description: 'Warrior',
-		selected: true,
-		history: 'Warrior history',
-		baseAttributes: {
-			strength: 1,
-			dexterity: 1,
-			constitution: 1,
-			intelligence: 1,
-			wisdom: 1,
-			charisma: 1,
-		},
-	},
-	{
-		name: 'paladin',
-		value: 'paladin',
-		emoji: '🛡️',
-		description: 'Paladin',
-		selected: true,
-		history: 'Paladin history',
-		baseAttributes: {
-			strength: 1,
-			dexterity: 1,
-			constitution: 1,
-			intelligence: 1,
-			wisdom: 1,
-			charisma: 1,
-		},
-	},
-	{
-		name: 'hunter',
-		value: 'hunter',
-		emoji: '🏹',
-		description: 'Hunter',
-		selected: true,
-		history: 'Hunter history',
-		baseAttributes: {
-			strength: 1,
-			dexterity: 1,
-			constitution: 1,
-			intelligence: 1,
-			wisdom: 1,
-			charisma: 1,
-		},
-	},
-	{
-		name: 'rogue',
-		value: 'rogue',
-		emoji: '🗡️',
-		description: 'Rogue',
-		selected: true,
-		history: 'Rogue history',
-		baseAttributes: {
-			strength: 1,
-			dexterity: 1,
-			constitution: 1,
-			intelligence: 1,
-			wisdom: 1,
-			charisma: 1,
-		},
-	},
-	{
-		name: 'priest',
-		value: 'priest',
-		emoji: '🧙',
-		description: 'Priest',
-		selected: true,
-		history: 'Priest history',
-		baseAttributes: {
-			strength: 1,
-			dexterity: 1,
-			constitution: 1,
-			intelligence: 1,
-			wisdom: 1,
-			charisma: 1,
-		},
-	},
-	{
-		name: 'death_knight',
-		value: 'death_knight',
-		emoji: '🦇',
-		description: 'Death Knight',
-		selected: true,
-		history: 'Death Knight history',
-		baseAttributes: {
-			strength: 1,
-			dexterity: 1,
-			constitution: 1,
-			intelligence: 1,
-			wisdom: 1,
-			charisma: 1,
-		},
-	},
-	{
-		name: 'shaman',
-		value: 'shaman',
-		emoji: '🌊',
-		description: 'Shaman',
-		selected: true,
-		history: 'Shaman history',
-		baseAttributes: {
-			strength: 1,
-			dexterity: 1,
-			constitution: 1,
-			intelligence: 1,
-			wisdom: 1,
-			charisma: 1,
-		},
-	},
-	{
-		name: 'mage',
-		value: 'mage',
-		emoji: '🧙',
-		description: 'Mage',
-		selected: true,
-		history: 'Mage history',
-		baseAttributes: {
-			strength: 1,
-			dexterity: 1,
-			constitution: 1,
-			intelligence: 1,
-			wisdom: 1,
-			charisma: 1,
-		},
-	},
-]
-
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
@@ -253,6 +122,14 @@ module.exports = class Command extends BaseCommand {
 		})
 	}
 	async execute(interaction, characters) {
+
+		const ActionController = new ActionsController(this.client.redisCache)
+
+		if (await ActionController.inAction(interaction.user.id, 'characters_command')) {
+			return interaction.reply({ content: this.client.languages.content('messages.characters.charactersCommandCooldown'), ephemeral: true })
+		}
+
+		await ActionController.addAction(interaction.user.id, { id: 'characters_command', duration: 60 * 12 })
 
 		const LanguagesController = this.client.languages
 
@@ -289,7 +166,8 @@ module.exports = class Command extends BaseCommand {
 				.setCustomId('create')
 				.setLabel(LanguagesController.content('messages.characters.charactersButtons.create'))
 				.setEmoji('👤')
-				.setStyle(ButtonStyle.Primary),
+				.setStyle(ButtonStyle.Primary)
+				.setDisabled(await ActionController.inAction(interaction.user.id, 'create_character')),
 		]
 
 		if (characters.selected) {
@@ -334,7 +212,7 @@ module.exports = class Command extends BaseCommand {
 
 		const filter = (i) => i.user.id === interaction.user.id
 
-		const collector = charactersMsg.createMessageComponentCollector({ filter, time: 30000 })
+		const collector = charactersMsg.createMessageComponentCollector({ filter, time: 1000 * 60 * 10 })
 
 		const action = {
 			name: '',
@@ -348,8 +226,8 @@ module.exports = class Command extends BaseCommand {
 		const validateCharacter = () => {
 			const stepsValidations = {
 				0: ['name', 'gender'],
-				1: ['race', 'class'],
-				2: ['element', 'constellation'],
+				1: ['race', 'element'],
+				2: ['constellation', 'gamemode'],
 			}
 			const allValidations = Object.values(stepsValidations).flat()
 			return { stepsValidations, all: allValidations.map((validation) => action.character[validation]), step: stepsValidations[action.step].map((validation) => action.character[validation]) }
@@ -369,7 +247,15 @@ module.exports = class Command extends BaseCommand {
 				fields: [],
 			}
 
-			if (action.character.baseAttributes) creationEmbed.fields.push({ name: LanguagesController.content('attributes.attributesnoun'), value: Object.entries(action.character.baseAttributes).map((attribute) => `${attribute[0]}: ${attribute[1]}`).join('\n') })
+			creationEmbed.fields.push({ name: `${LanguagesController.content('nouns.name')}: ${action.character.name || LanguagesController.content('messages.utils.undefined')}`,
+				value: `
+${LanguagesController.content('nouns.gamemode')}: ${LanguagesController.content(`nouns.${action.character.gamemode}`, { undefined: 'messages.utils.undefined' })}
+${LanguagesController.content('nouns.gender')}: ${LanguagesController.content(`genders.${action.character.gender}`, { undefined: 'messages.utils.undefined' })}
+${LanguagesController.content('nouns.race')}: ${LanguagesController.content(`races.${action.character.race}`, { undefined: 'messages.utils.undefined' })}
+${LanguagesController.content('nouns.element')}: ${action.character.element}
+${LanguagesController.content('nouns.constellation')}: ${action.character.constellation}
+` })
+			if (action.character.baseAttributes) creationEmbed.fields.push({ name: LanguagesController.content('nouns.attributes'), value: Object.entries(action.character.baseAttributes).map((attribute) => `${attribute[0]}: ${attribute[1]}`).join('\n') })
 
 			const creationComponents = () => {
 				const components = [
@@ -411,7 +297,7 @@ module.exports = class Command extends BaseCommand {
 					components.push(new ActionRowBuilder().addComponents([
 						new StringSelectMenuBuilder()
 							.setCustomId('selectgender')
-							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%genders.gendernoun}' }))
+							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%nouns.gender}' }))
 							.addOptions([
 								{
 									label: LanguagesController.content('genders.male'),
@@ -438,7 +324,7 @@ module.exports = class Command extends BaseCommand {
 					components.push(new ActionRowBuilder().addComponents([
 						new StringSelectMenuBuilder()
 							.setCustomId('selectrace')
-							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%messages.characters.creationCharacterDefaults.race}' }))
+							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%nouns.race}' }))
 							.addOptions(races.filter(race => race.selected).map((race) => {
 								return {
 									label: race.name,
@@ -451,24 +337,8 @@ module.exports = class Command extends BaseCommand {
 					]))
 					components.push(new ActionRowBuilder().addComponents([
 						new StringSelectMenuBuilder()
-							.setCustomId('selectclass')
-							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%messages.characters.creationCharacterDefaults.class}' }))
-							.addOptions(classes.filter(character_class => character_class.selected).map((character_class) => {
-								return {
-									label: character_class.name,
-									value: character_class.value,
-									emoji: character_class.emoji,
-									description: character_class.description,
-									default: action.character.class === character_class.name,
-								}
-							})),
-					]))
-				}
-				if (action.step === 2) {
-					components.push(new ActionRowBuilder().addComponents([
-						new StringSelectMenuBuilder()
 							.setCustomId('selectelement')
-							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%messages.characters.creationCharacterDefaults.element}' }))
+							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%nouns.element}' }))
 							.addOptions(elements.filter(element => element.selected).map((element) => {
 								return {
 									label: element.name,
@@ -479,24 +349,26 @@ module.exports = class Command extends BaseCommand {
 								}
 							})).addOptions([
 								{
-									label: LanguagesController.content('messages.characters.creationCharacterDefaults.random'),
+									label: LanguagesController.content('nouns.random'),
 									value: 'random',
 									emoji: '🎲',
 									default: action.character.element === 'random',
 								},
 								{
-									label: LanguagesController.content('messages.characters.creationCharacterDefaults.none'),
+									label: LanguagesController.content('nouns.none'),
 									value: 'none',
 									emoji: '❌',
 									default: action.character.element === 'none',
 								},
 							]),
 					]))
+				}
+				if (action.step === 2) {
 
 					components.push(new ActionRowBuilder().addComponents([
 						new StringSelectMenuBuilder()
 							.setCustomId('selectconstellation')
-							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%messages.characters.creationCharacterDefaults.constellation}' }))
+							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%nouns.constellation}' }))
 							.addOptions(action.possiblesConstellations.map((constellation) => {
 								return {
 									label: constellation.name,
@@ -508,16 +380,53 @@ module.exports = class Command extends BaseCommand {
 							}))
 							.addOptions([
 								{
-									label: LanguagesController.content('messages.characters.creationCharacterDefaults.random'),
+									label: LanguagesController.content('nouns.random'),
 									value: 'random',
 									emoji: '🎲',
 									default: action.character.constellation === 'random',
 								},
 								{
-									label: LanguagesController.content('messages.characters.creationCharacterDefaults.none'),
+									label: LanguagesController.content('nouns.none'),
 									value: 'none',
 									emoji: '❌',
 									default: action.character.constellation === 'none',
+								},
+							]),
+
+					]))
+
+					components.push(new ActionRowBuilder().addComponents([
+						new StringSelectMenuBuilder()
+							.setCustomId('selectgamemode')
+							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%nouns.gamemode}' }))
+							.addOptions([
+								{
+									label: LanguagesController.content('nouns.normal'),
+									value: 'normal',
+									emoji: '🟢',
+									description: LanguagesController.content('messages.characters.creationCharacterDefaults.gamemode.normal'),
+									default: action.character.gamemode === 'normal',
+								},
+								{
+									label: LanguagesController.content('nouns.hard'),
+									value: 'hard',
+									emoji: '🔴',
+									description: LanguagesController.content('messages.characters.creationCharacterDefaults.gamemode.hard'),
+									default: action.character.gamemode === 'hard',
+								},
+								{
+									label: LanguagesController.content('nouns.abyss'),
+									value: 'abyss',
+									emoji: '👿',
+									description: LanguagesController.content('messages.characters.creationCharacterDefaults.gamemode.abyss'),
+									default: action.character.gamemode === 'abyss',
+								},
+								{
+									label: LanguagesController.content('nouns.random'),
+									value: 'random',
+									emoji: '🎲',
+									description: LanguagesController.content('messages.characters.creationCharacterDefaults.gamemode.random'),
+									default: action.character.gamemode === 'random',
 								},
 							]),
 
@@ -542,15 +451,11 @@ module.exports = class Command extends BaseCommand {
 
 		collector.on('collect', async (i) => {
 
-			collector.resetTimer()
-
 			if (i.isStringSelectMenu()) {
 				i.deferUpdate().then(async () => {
 					action.character[i.customId.replace('select', '')] = i.values[0]
-					if (['selectrace', 'selectclass'].includes(i.customId)) {
-						const race_baseAttributes = races.find((race) => race.value == action.character.race)?.baseAttributes
-						const class_baseAttributes = classes.find((character_class) => character_class.value == action.character.class)?.baseAttributes
-						action.character.baseAttributes = attributesUtils.mergeAttributes([race_baseAttributes, class_baseAttributes])
+					if (['selectrace'].includes(i.customId)) {
+						action.character.baseAttributes = races.find((race) => race.value == action.character.race)?.baseAttributes
 					}
 					if (i.customId == 'selectgender' && action.character.name) {
 						collector.emit('update_embed', i)
@@ -642,6 +547,7 @@ module.exports = class Command extends BaseCommand {
 
 			if (action.check === 'Create' && i.customId === 'confirm') {
 				action.active = true
+				ActionController.addAction(i.user.id, { id: 'create_character', duration: 60 * 10 })
 				collector.emit('update_embed', i)
 			}
 			if (i.customId === 'confirmcreation') {
@@ -657,6 +563,7 @@ module.exports = class Command extends BaseCommand {
 		})
 
 		collector.on('end', async () => {
+			ActionController.removeAction(interaction.user.id, ['create_character', 'characters_command'])
 			if (action.concluded) return
 			disableAllButtons(charactersMsg)
 		})
