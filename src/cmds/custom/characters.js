@@ -249,13 +249,13 @@ module.exports = class Command extends BaseCommand {
 
 			creationEmbed.fields.push({ name: `${LanguagesController.content('nouns.name')}: ${action.character.name || LanguagesController.content('messages.utils.undefined')}`,
 				value: `
-${LanguagesController.content('nouns.gamemode')}: ${LanguagesController.content(`nouns.${action.character.gamemode}`, { undefined: 'messages.utils.undefined' })}
 ${LanguagesController.content('nouns.gender')}: ${LanguagesController.content(`genders.${action.character.gender}`, { undefined: 'messages.utils.undefined' })}
 ${LanguagesController.content('nouns.race')}: ${LanguagesController.content(`races.${action.character.race}`, { undefined: 'messages.utils.undefined' })}
 ${LanguagesController.content('nouns.element')}: ${action.character.element}
-${LanguagesController.content('nouns.constellation')}: ${action.character.constellation}
-` })
+${LanguagesController.content('nouns.constellation')}: ${action.character.constellation}` })
 			if (action.character.baseAttributes) creationEmbed.fields.push({ name: LanguagesController.content('nouns.attributes'), value: Object.entries(action.character.baseAttributes).map((attribute) => `${attribute[0]}: ${attribute[1]}`).join('\n') })
+
+			if (action.character.gamemode) creationEmbed.fields.push({ name: `${LanguagesController.content('nouns.gamemode')}: ${LanguagesController.content(`nouns.${action.character.gamemode}`, { undefined: 'messages.utils.undefined' })}`, value: LanguagesController.content(`messages.characters.creationCharacterDefaults.gamemode.${action.character.gamemode}`) })
 
 			const creationComponents = () => {
 				const components = [
@@ -493,18 +493,22 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 					})
 
 					if (submitted) {
-						const chracter_name = submitted.fields.getTextInputValue('namemodal')
-						action.character.name = chracter_name
+						const character_name = submitted.fields.getTextInputValue('namemodal')
+						action.character.name = character_name.toLowerCase().replace(/[&/\\#,+()$~%.'":*?<>{}]/g, '').replace(/[^a-zA-Z ]/g, '')
+
+						if (action.character.name.length < 5) {
+							return submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.short_name', { character_name: action.character.name }), ephemeral: true })
+						}
 
 						// Checar se já tem um personagem com esse nome, em characters_geral, coluna essence (um json) e verificar se o nome é igual ao que o usuário digitou
 						const query = 'SELECT * FROM characters_geral WHERE essence->>\'name\' = ?'
-						const exists = await this.client.dataManager.query(query, [chracter_name])
+						const exists = await this.client.dataManager.query(query, [character_name])
 						console.log('checkexistsname: ', exists)
 						if (exists.rows.length > 0) {
-							return submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.exists', { character_name: chracter_name }), ephemeral: true })
+							return submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.exists', { character_name }), ephemeral: true })
 						}
 
-						submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.success', { character_name: chracter_name }), ephemeral: true })
+						submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.success', { character_name }), ephemeral: true })
 						return action.character.gender ? collector.emit('update_embed', i) : null
 					}
 				})

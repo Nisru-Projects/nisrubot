@@ -41,7 +41,7 @@ module.exports = class LanguagesController {
 				return this.content(vars.undefined, vars, lang)
 			}
 			console.log(`[LANGUAGE] An error occurred while trying to get the content of the key ${key} in the language ${lang}\nERROR MESSAGE: ${error.message}`.red)
-			return key.slice(key.lastIndexOf('.') + 1)
+			return '{...' + key.slice(key.lastIndexOf('.') + 1) + '}'
 		}
 	}
 
@@ -70,7 +70,7 @@ module.exports = class LanguagesController {
 				vars[key] = contentkey
 				if (!vars[key]) {
 					console.log(`[LANGUAGE] An error occurred while trying to get the content of the key ${key + ': ' + oldvarkey} in the language ${lang}`.red)
-					return key.slice(key.lastIndexOf('.') + 1)
+					return '{...' + key.slice(key.lastIndexOf('.') + 1) + '}'
 				}
 			}
 			message = message.replace(`{${key}}`, vars[key])
