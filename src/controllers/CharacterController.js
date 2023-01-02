@@ -52,12 +52,30 @@ module.exports = class CharacterController {
 
 		while ((await this.client.dataManager.get(character_id, 'characters_geral'))['characters_geral.*'] != null) {
 			character_id = randomString(16)
-			console.log('character id2', character_id)
 		}
 
 		data.character_id = character_id
 
-		console.log('data character id', data)
+		const essence = {
+			name: data.name,
+			gender: data.gender,
+			element: data.element,
+			race: data.race,
+			constellation: data.constellation,
+			gamemode: data.gamemode,
+		}
+
+		await this.client.dataManager.insert('characters_geral.character_id', data.character_id)
+
+		await this.client.dataManager.set(
+			{ 'characters_geral': character_id, 'users': data.user_id },
+			{
+				'characters_geral.essence': essence,
+				'characters_geral.attributes': data.baseAttributes,
+				'users.characters': this.client.knexDatabase.raw('array_append(characters, ?)', [character_id]),
+				'users.selected_character': character_id,
+			})
+
 	}
 
 	deleteCharacter(character_id) {

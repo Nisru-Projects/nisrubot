@@ -5,7 +5,10 @@ module.exports = class DataManager {
 	}
 
 	getPrimaryKey(key) {
-		return this.knexDatabase.keys.find(keyobj => keyobj.key === key).primaryKey
+		if (!key.includes('.')) key = `${key}.*`
+		const primaryKey = this.knexDatabase.keys.find(keyobj => keyobj.key === key)?.primaryKey
+		if (!primaryKey) return console.log(`[DATABASE] Invalid key: ${key}`.red)
+		return primaryKey
 	}
 
 	updateCache(primaryValue, key, value) {
@@ -89,44 +92,41 @@ module.exports = class DataManager {
 		})
 	}
 
-	set(primaryValue, keys, values) {
+	insert(key, value) {
+		return new Promise(async (resolve) => {
+			const query = `INSERT INTO ${key.split('.')[0]} (${key.split('.')[1]}) VALUES (?)`
+			const result = await this.query(query, [value])
+			resolve(result)
+		})
+	}
 
-		if (typeof keys === 'string') keys = [keys]
+	set(primaryValues, values) {
+
 		if (typeof values === 'string') values = [values]
 
-		keys = keys.map(key => {
+		const keys = Object.keys(values).map(key => {
 			if (!key.includes('.')) return `${key}.*`
 			else return key
 		})
 
+		for (const key of keys) {
+			if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key: ${key}`.red)
+		}
+
 		const tables = keys.map(key => key.split('.')[0])
 		const uniqueTables = [...new Set(tables)]
 
-		if (uniqueTables.length === 1) {
-			return new Promise(async (resolve) => {
-				const table = uniqueTables[0]
-				const primaryKey = this.getPrimaryKey(`${table}.*`)
-				const query = `UPDATE ${table} SET ${keys.map(key => `${key.split('.')[1]} = ?`).join(', ')} WHERE ${primaryKey} = ?`
-				await this.query(query, [...values, primaryValue])
-				for (const key of keys) {
-					this.updateCache(primaryValue, key)
-				}
-				resolve()
-			})
-		}
-		else {
-			return new Promise(async (resolve) => {
-				for (let i = 0; i < keys.length; i++) {
-					const key = keys[i]
-					const value = values[i]
-					const table = key.split('.')[0]
-					const query = `UPDATE ${table} SET ${key.split('.')[1]} = ? WHERE ${this.getPrimaryKey(`${table}.*`)} = ?`
-					await this.query(query, [value, primaryValue])
-					this.updateCache(primaryValue, key)
-				}
-				resolve()
-			})
-		}
+		return new Promise(async (resolve) => {
+			for (const table of uniqueTables) {
+				const primaryKey = this.getPrimaryKey(table)
+				const query = `UPDATE ${table} SET ${keys.filter(key => key.split('.')[0] === table).map(key => `${key.split('.')[1]} = ?`).join(', ')} WHERE ${primaryKey} = ?`
+				const params = keys.filter(key => key.split('.')[0] === table).map(key => values[key])
+				params.push(primaryValues[table])
+				await this.query(query, params)
+				await this.redisCache.delete(`${table}:${primaryValues[table]}`)
+			}
+			resolve()
+		})
 	}
 
 	delete(primaryValue, key) {

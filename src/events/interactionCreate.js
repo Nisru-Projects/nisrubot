@@ -14,7 +14,7 @@ module.exports = {
 		const Middleware = new MiddlewareController(client, interaction)
 
 		if (interaction.isCommand()) {
-			const cmd = client.commands.get(interaction.commandName)
+			const cmd = client.commands?.get(interaction.commandName)
 			if (!cmd) return
 
 			await Middleware.checkUser()

@@ -135,14 +135,29 @@ module.exports = class Command extends BaseCommand {
 
 		const Character = new CharacterController(this.client, interaction.user)
 
-		const charactersFields = characters.characters.map(async (character_id) => {
-			const character = await Character.getCharacterInfo(character_id, 'characters_geral')
-			return {
-				name: character.name,
-				value: LanguagesController.content('messages.characters.charactersEmbed.level', { level: calculateLevel(character.exp) }),
-				inline: true,
+		async function getCharactersComponents() {
+
+			const charactersFields = []
+			const charactersButtons = []
+
+			for (const character_id of characters.characters) {
+				const character = (await Character.getCharacterInfo(character_id, 'characters_geral'))['characters_geral.*']
+				charactersFields.push({ name: character.essence.name, value: calculateLevel(character.exp).toString() })
+				charactersButtons.push(
+					new ButtonBuilder()
+						.setCustomId(`select${character.character_id}`)
+						.setLabel(LanguagesController.content('messages.characters.charactersButtons.select', { character_name: character.essence.name }))
+						.setEmoji('👤')
+						.setStyle(ButtonStyle.Secondary)
+						.setDisabled(character.character_id === characters.selected_character),
+				)
 			}
-		})
+
+			return { charactersFields, charactersButtons }
+
+		}
+
+		const { charactersFields, charactersButtons } = await getCharactersComponents()
 
 		const charactersEmbed = {
 			color: 0x36393f,
@@ -151,15 +166,6 @@ module.exports = class Command extends BaseCommand {
 			fields: charactersFields,
 			description: LanguagesController.content('messages.characters.charactersEmbed.description', { has_character: characters.characters.length > 0 }),
 		}
-
-		const charactersButtons = characters.characters.map(async (character_id, index) => {
-			const character = await Character.getCharacterInfo(character_id, 'characters_geral')
-			return new ButtonBuilder()
-				.setCustomId(`select${index}`)
-				.setLabel(LanguagesController.content('messages.characters.charactersButtons.select', { character_name: character.name }))
-				.setEmoji('👤')
-				.setStyle(ButtonStyle.Secondary)
-		})
 
 		const actionsButtons = [
 			new ButtonBuilder()
@@ -208,7 +214,14 @@ module.exports = class Command extends BaseCommand {
 		if (charactersButtons.length > 0) charactersComponents.push(new ActionRowBuilder().addComponents(charactersButtons))
 		charactersComponents.push(new ActionRowBuilder().addComponents(actionsButtons))
 
-		const charactersMsg = await interaction.reply({ embeds: [charactersEmbed], components: charactersComponents, fetchReply: true })
+		let charactersMsg
+		try {
+			charactersMsg = await interaction.reply({ embeds: [charactersEmbed], components: charactersComponents, fetchReply: true })
+		}
+		catch (error) {
+			console.log(error)
+			return ActionController.removeAction(interaction.user.id, ['characters_command'])
+		}
 
 		const filter = (i) => i.user.id === interaction.user.id
 
@@ -219,7 +232,9 @@ module.exports = class Command extends BaseCommand {
 			active: false,
 			step: 0,
 			stepMax: 2,
-			character: {},
+			character: {
+				user_id: interaction.user.id,
+			},
 			possiblesConstellations: constellations.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * (5 - 2 + 1) + 2)),
 		}
 
@@ -503,7 +518,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 						// Checar se já tem um personagem com esse nome, em characters_geral, coluna essence (um json) e verificar se o nome é igual ao que o usuário digitou
 						const query = 'SELECT * FROM characters_geral WHERE essence->>\'name\' = ?'
 						const exists = await this.client.dataManager.query(query, [character_name])
-						console.log('checkexistsname: ', exists)
+
 						if (exists.rows.length > 0) {
 							return submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.exists', { character_name }), ephemeral: true })
 						}

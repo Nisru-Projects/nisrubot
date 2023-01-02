@@ -6,9 +6,8 @@ module.exports = class MiddlewareController {
 
 	async checkUser() {
 		const user = await this.client.dataManager.get(this.interaction.user.id, ['users.*'], true)
-
 		if (user['users.*'] == null) {
-			await this.client.dataManager.query(`INSERT INTO users (discord_id) VALUES ('${this.interaction.user.id}')`)
+			await this.client.dataManager.insert('users.discord_id', this.interaction.user.id)
 		}
 	}
 
@@ -39,10 +38,10 @@ module.exports = class MiddlewareController {
 	}
 
 	async getCharacters() {
-		const user = await this.client.knexDatabase.select('characters', 'selected_character').from('users').where('discord_id', this.interaction.user.id).first()
+		const user = await this.client.dataManager.get(this.interaction.user.id, ['users.selected_character', 'users.characters'], true)
 		return {
-			selected_character: user.characters == null ? undefined : user.selected_character,
-			characters: user.characters == null ? [] : user.characters,
+			selected_character: user['users.selected_character'] == null ? undefined : user['users.selected_character'],
+			characters: user['users.characters'] == null ? [] : user['users.characters'],
 		}
 	}
 }
