@@ -21,10 +21,17 @@ module.exports = {
 			}
 		})
 
-		client.guilds.cache.forEach(guild => {
-			guild.commands.set(commands)
+		client.guilds.cache.forEach(async guild => {
+			try {
+				await guild.commands.set(commands)
+			}
+			catch (error) {
+				/* empty */
+				console.log(`[ERROR] ${error.message}`.red)
+			}
 		})
 
+		console.timeEnd('Startup')
 		console.log('\n         Bot started.\n'.green)
 
 		process.on('unhandledRejection', (reason, promise) => {

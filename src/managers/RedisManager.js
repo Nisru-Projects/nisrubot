@@ -1,6 +1,6 @@
 const { createClient } = require('redis')
 const redisClient = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:6379` })
-module.exports = class CacheManager {
+module.exports = class RedisManager {
 	loadData(client) {
 		client.redisCache = this
 		this.connect().then(() => {

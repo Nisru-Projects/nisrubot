@@ -1,7 +1,67 @@
+const fs = require('fs')
+const path = require('path')
 module.exports = class DataManager {
 	constructor(knexDatabase, redisCache) {
 		this.knexDatabase = knexDatabase
 		this.redisCache = redisCache
+	}
+
+	async createBackup() {
+		const backupFiles = fs.readdirSync(path.join(__dirname, '..', '..', 'backups'))
+		const lastBackup = backupFiles[backupFiles.length - 1]
+		if (lastBackup) {
+			const date = lastBackup.split('_')[0].split('-').reverse().join('-') + ' ' + lastBackup.split('_')[1].split('-').join(':').replace('.json', '')
+			const lastBackupDate = new Date(date)
+			const now = new Date()
+			const difference = now.getTime() - lastBackupDate.getTime()
+			const differenceInHours = Math.round(difference / (1000 * 3600))
+			if (differenceInHours < 24) return console.log('[DATABASE] Backup already created today'.yellow)
+		}
+		try {
+			const backup = await this.knexDatabase.raw('SELECT * FROM information_schema.tables WHERE table_schema = \'public\'')
+			const tables = backup.rows.map(table => table.table_name)
+			const backupData = {}
+			for (const table of tables) {
+				const data = await this.knexDatabase.raw(`SELECT * FROM ${table}`)
+				backupData[table] = data
+			}
+			const formattedDate = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/\//g, '-').replace(/:/g, '-').replace(/ /g, '_')
+			const backupPath = path.join(__dirname, '..', '..', 'backups', `${formattedDate}.json`)
+			const backupDataString = JSON.stringify(backupData, null, 2)
+			fs.writeFileSync(backupPath, backupDataString)
+			console.log(`[DATABASE] Backup created: ${formattedDate}`.green)
+		}
+		catch (error) {
+			console.log(`[DATABASE] Error creating backup: ${error}`.red)
+		}
+	}
+
+	async deleteOldBackups() {
+		const backupDir = path.join(__dirname, '..', '..', 'backups')
+		const files = fs.readdirSync(backupDir)
+		const filesToDelete = files.filter(file => {
+			const fileDate = new Date(file.split('_')[0].split('-').reverse().join('-'))
+			const currentDate = new Date()
+			const diff = currentDate.getTime() - fileDate.getTime()
+			const diffDays = Math.ceil(diff / (1000 * 3600 * 24))
+			return diffDays > 14
+		})
+		for (const file of filesToDelete) {
+			console.log(`[DATABASE] Deleting backup: ${file}`.yellow)
+			fs.unlinkSync(path.join(backupDir, file))
+		}
+	}
+
+	restoreBackup(backupPath) {
+		return new Promise(async (resolve) => {
+			const backupData = require(backupPath)
+			const tables = Object.keys(backupData)
+			for (const table of tables) {
+				await this.knexDatabase(table).del()
+				await this.knexDatabase(table).insert(backupData[table])
+			}
+			resolve()
+		})
 	}
 
 	getPrimaryKey(key) {

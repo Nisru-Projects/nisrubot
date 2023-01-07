@@ -1,8 +1,8 @@
 const { GatewayIntentBits, Client } = require('discord.js')
 
 const eventsHandler = require('./handlers/eventsHandler')
-const DatabaseManager = require('./managers/DatabaseManager')
-const CacheManager = require('./managers/CacheManager')
+const DbManager = require('./managers/DbManager')
+const RedisManager = require('./managers/RedisManager')
 const DataManager = require('./managers/DataManager')
 
 module.exports = class NisruClient extends Client {
@@ -17,10 +17,13 @@ module.exports = class NisruClient extends Client {
 		console.log(' ')
 		eventsHandler(this)
 
-		const Database = new DatabaseManager(options)
-		const RedisCache = new CacheManager(this)
+		const Database = new DbManager(options)
+		const RedisCache = new RedisManager(this)
 
 		this.dataManager = new DataManager(Database.loadData(this), RedisCache.loadData(this))
+
+		this.dataManager.createBackup()
+		this.dataManager.deleteOldBackups()
 
 		this.verification(options)
 

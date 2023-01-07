@@ -1,13 +1,11 @@
 const BaseCommand = require('../../BaseCommand')
 
-const DataManager = require('../../managers/DataManager')
-
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
-			name: client.languages.content('commands.test.name'),
-			description: client.languages.content('commands.test.name'),
-			permissions: ['admin.tools.test'],
+			name: client.languages.content('commands.benchmark.name'),
+			description: client.languages.content('commands.benchmark.name'),
+			permissions: ['admin.benchmark'],
 		})
 	}
 	// eslint-disable-next-line no-unused-vars
@@ -15,9 +13,7 @@ module.exports = class Command extends BaseCommand {
 
 		console.time('test')
 
-		const dataManager = new DataManager(this.client.knexDatabase, this.client.redisCache)
-
-		await dataManager.benchmark(interaction.user.id)
+		await this.client.dataManager.benchmark(interaction.user.id)
 
 		console.timeEnd('test')
 

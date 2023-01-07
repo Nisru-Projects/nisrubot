@@ -1,4 +1,4 @@
-module.exports = class DatabaseManager {
+module.exports = class PgBaseManager {
 	constructor(options) {
 		this.options = options[options.mode]
 	}
