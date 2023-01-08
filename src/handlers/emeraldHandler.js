@@ -21,8 +21,28 @@ module.exports = async (client) => {
 
 	async function loadSkins() {
 		const res = await emeraldManager.getFiles('nisruemerald', 'resources/characters/skins')
-
-		console.log(res.data)
+		res.data.forEach(async dir => {
+			if (dir.type === 'dir') {
+				const bodypart = await emeraldManager.getFiles('nisruemerald', `resources/characters/skins/${dir.name}`)
+				bodypart.data.forEach(async type => {
+					if (type.type === 'dir') {
+						const files = await emeraldManager.getFiles('nisruemerald', `resources/characters/skins/${dir.name}/${type.name}`)
+						files.data.forEach(async file => {
+							if (file.type === 'file') {
+								const content = await emeraldManager.getContent(file.download_url, true)
+								const skinData = {
+									name: file.name,
+									path: file.path,
+									size: file.size,
+									buffer: content.data,
+								}
+								client.redisCache.set(`skins:${skinData.path}`, JSON.stringify(skinData))
+							}
+						})
+					}
+				})
+			}
+		})
 	}
 
 	await loadLanguages()

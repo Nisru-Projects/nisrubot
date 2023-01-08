@@ -22,7 +22,13 @@ module.exports = class EmeraldManager {
 		})
 	}
 
-	getContent(download_url) {
+	getContent(download_url, buffer = false) {
+		if (buffer) {
+			return axios.get(download_url, {
+				headers: this.headers,
+				responseType: 'arraybuffer',
+			})
+		}
 		return axios.get(download_url, {
 			headers: this.headers,
 		})

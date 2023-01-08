@@ -1,28 +1,5 @@
 const randomString = require('../utils/randomString')
-
-/*
-**character_id**: BIGINT (Timestamp)
-
-**skin**: JSON {
-
-}
-
-**exp**: BIGINT
-
-**attributes**: JSON {
-
-}
-
-**essence**: JSON {
-
-class: TEXT
-
-race: TEXT
-
-constellation: TEXT
-
-}
-*/
+const Canvas = require('canvas')
 
 module.exports = class CharacterController {
 	constructor(client, user) {
@@ -36,6 +13,26 @@ module.exports = class CharacterController {
 
 	getCacheSkins() {
 		return this.client.redisCache.get('skins')
+	}
+
+	async getSkin(character_id) {
+		const skin = await this.client.dataManager.get(character_id, 'characters.skin')
+		return skin
+	}
+
+	async makeSkin(character_id, part, paths) {
+		const { createCanvas, loadImage } = Canvas
+		const canvas = createCanvas(250, 250)
+		const ctx = canvas.getContext('2d')
+
+		for (const path of paths) {
+			const imagebuffer = await this.client.redisCache.get(`skins:${path}`)
+			const image = await loadImage(imagebuffer)
+			ctx.drawImage(image, 0, 0, 250, 250)
+		}
+
+		const buffer = canvas.toBuffer('image/png')
+		return buffer
 	}
 
 	async getCharacters() {

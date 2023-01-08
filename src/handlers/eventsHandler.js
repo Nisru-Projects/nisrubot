@@ -6,8 +6,7 @@ module.exports = (client) => {
 		const eventFunction = require(`../events/${file}`)
 		const execute = (...args) => eventFunction.execute(client, ...args)
 		if (eventFunction.once) {
-			client.once(eventFunction.name, execute)
-			return
+			return client.once(eventFunction.name, execute)
 		}
 		client.on(eventFunction.name, execute)
 	})
