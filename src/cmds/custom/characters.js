@@ -1,4 +1,4 @@
-const BaseCommand = require('../../BaseCommand')
+const BaseCommand = require('../../utils/BaseCommand')
 const { ActionRowBuilder, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js')
 const disableAllButtons = require('../../utils/disableAllButtons')
 const CharacterController = require('../../controllers/CharacterController')

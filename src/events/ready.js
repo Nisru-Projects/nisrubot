@@ -31,19 +31,19 @@ module.exports = {
 			}
 		})
 
-		console.timeEnd('Startup')
-		console.log('\n         Bot started.\n'.green)
+		const time = Math.round(process.uptime())
+		console.log(`\n     Bot started in ${time}s\n`.green)
 
 		process.on('unhandledRejection', (reason, promise) => {
-			console.log('Unhandled Rejection at:', promise, 'reason:', reason)
+			console.log(`[ERROR] Unhandled Rejection at: ${promise}, reason: ${reason}`.red)
 		})
 
 		process.on('uncaughtException', (err, origin) => {
-			console.log('Uncaught Exception at:', origin, 'error:', err)
+			console.log(`[ERROR] Uncaught Exception at: ${origin}, reason: ${err}`.red)
 		})
 
 		process.on('exit', (code) => {
-			console.log(`About to exit with code: ${code}`)
+			console.log(`[INFO] Process exited with code: ${code}`.yellow)
 		})
 
 	},

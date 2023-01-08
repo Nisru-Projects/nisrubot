@@ -1,6 +1,6 @@
 const { default: axios } = require('axios')
 const { ApplicationCommandOptionType, AttachmentBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js')
-const BaseCommand = require('../../BaseCommand')
+const BaseCommand = require('../../utils/BaseCommand')
 
 module.exports = class Command extends BaseCommand {
 	constructor(client) {

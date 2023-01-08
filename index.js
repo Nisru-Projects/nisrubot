@@ -1,4 +1,3 @@
-console.time('Startup')
 require('colors')
 const Nisru = require('./src/Nisru')
 const config = require('./config')

@@ -6,7 +6,7 @@ module.exports = class RedisManager {
 		this.connect().then(() => {
 			console.log('[REDIS] Connected'.green)
 			this.clearWithPrefix('actions:').then(() => {
-				console.log('[REDIS] Actions cleared'.green)
+				console.log('[REDIS] Actions cleared'.yellow)
 			})
 		}).catch(err => {
 			console.log(`[REDIS] Not connected: ${err.message}`.red)
