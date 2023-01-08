@@ -281,7 +281,7 @@ module.exports = class Command extends BaseCommand {
 
 		const filter = (i) => i.user.id === interaction.user.id
 
-		const collector = charactersMsg.createMessageComponentCollector({ filter, time: 1000 * 60 * 10 })
+		const collector = charactersMsg.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 })
 
 		const validateCharacter = () => {
 			const stepsValidations = {
@@ -508,15 +508,24 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 			const customEmbed = new EmbedBuilder()
 				.setTitle(LanguagesController.content('messages.characters.customCharacter.title'))
 				.setDescription(LanguagesController.content('messages.characters.customCharacter.description'))
-				.setColor(0x00FF00)
+				.setColor('#313236')
 				.setImage('https://i.imgur.com/FBicrHc.png')
 
-			// 3 opções: top, mid e random, cada um emoji de uma cor
+			if (action.custom === 'top') {
+				customEmbed.setColor('#0000ff')
+			}
+			else if (action.custom === 'mid') {
+				customEmbed.setColor('#00ff00')
+			}
+			else if (action.custom === 'random') {
+				customEmbed.setColor('#ff0000')
+			}
+
 			const customComponents = [
 				new ActionRowBuilder().addComponents([
 					new StringSelectMenuBuilder()
 						.setCustomId('selectcustom')
-						.setPlaceholder(LanguagesController.content('messages.characters.customCharacter.select'))
+						.setPlaceholder(LanguagesController.content('messages.characters.customCharacter.description'))
 						.addOptions([
 							{
 								label: LanguagesController.content('nouns.top'),
@@ -585,11 +594,16 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 					if (i.customId.startsWith('chactionmenu')) {
 						const value = i.values[0]
 						const characterid = i.customId.replace('chactionmenu', '')
+						collector.resetTimer()
 						if (value == 'customize') {
 							action.character = characters.characters.find((ch) => ch.id == characterid)
 							action.active = true
 							collector.emit('update_embed_custom', i)
 						}
+					}
+
+					if (i.customid == 'selectcustom') {
+						action.custom = i.values[0]
 					}
 
 				})
