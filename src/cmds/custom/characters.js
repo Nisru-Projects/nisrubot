@@ -135,84 +135,119 @@ module.exports = class Command extends BaseCommand {
 
 		const Character = new CharacterController(this.client, interaction.user)
 
-		async function getCharactersComponents() {
+		const action = {
+			possiblesConstellations: constellations.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * (5 - 2 + 1) + 2)),
+			reset: () => {
+				action.name = ''
+				action.active = false
+				action.step = 0
+				action.stepMax = 2
+				action.character = {
+					user_id: interaction.user.id,
+				}
+			},
+		}
 
-			const charactersFields = []
-			const charactersButtons = []
+		action.reset()
 
-			for (const character_id of characters.characters) {
-				const character = (await Character.getCharacterInfo(character_id, 'characters_geral'))['characters_geral.*']
-				charactersFields.push({ name: character.essence.name, value: calculateLevel(character.exp).toString() })
-				charactersButtons.push(
-					new ButtonBuilder()
-						.setCustomId(`select${character.character_id}`)
-						.setLabel(LanguagesController.content('messages.characters.charactersButtons.select', { character_name: character.essence.name }))
-						.setEmoji('👤')
-						.setStyle(ButtonStyle.Secondary)
-						.setDisabled(character.character_id === characters.selected_character),
-				)
+		async function menuEmbed(i) {
+
+			async function getCharactersComponents() {
+
+				const charactersFields = []
+				const charactersButtons = []
+				const customButtons = []
+
+				for (const character_id of characters.characters) {
+					const character = (await Character.getCharacterInfo(character_id, 'characters_geral'))['characters_geral.*']
+					charactersFields.push({ name: character.essence.name, value: calculateLevel(character.exp).toString() })
+					charactersButtons.push(
+						new ButtonBuilder()
+							.setCustomId(`chselect${character.character_id}`)
+							.setLabel(LanguagesController.content('messages.characters.charactersButtons.select', { character_name: character.essence.name }))
+							.setEmoji(character.character_id === characters.selected_character ? '✅' : '👤')
+							.setStyle(ButtonStyle.Secondary)
+							.setDisabled(character.character_id === characters.selected_character),
+					)
+				}
+
+				if (characters.selected_character) {
+					const selected_character = (await Character.getCharacterInfo(characters.selected_character, 'characters_geral'))['characters_geral.*']
+					customButtons.push(
+						new ButtonBuilder()
+							.setCustomId('customize')
+							.setLabel(LanguagesController.content('messages.characters.charactersButtons.customize', { character_name: selected_character.essence.name }))
+							.setEmoji('1054051525204385882')
+							.setStyle(ButtonStyle.Primary),
+						new ButtonBuilder()
+							.setCustomId('delete')
+							.setLabel(LanguagesController.content('messages.characters.charactersButtons.delete', { character_name: selected_character.essence.name }))
+							.setStyle(ButtonStyle.Danger),
+						new ButtonBuilder()
+							.setCustomId('sell')
+							.setLabel(LanguagesController.content('messages.characters.charactersButtons.sell', { character_name: selected_character.essence.name }))
+							.setStyle(ButtonStyle.Success),
+					)
+				}
+
+				return { charactersFields, charactersButtons, customButtons }
+
 			}
 
-			return { charactersFields, charactersButtons }
+			const { charactersFields, charactersButtons, customButtons } = await getCharactersComponents()
 
-		}
+			const charactersEmbed = {
+				color: 0x36393f,
+				title: LanguagesController.content('messages.characters.charactersEmbed.title'),
+				timestamp: new Date().toISOString(),
+				fields: charactersFields,
+				description: LanguagesController.content('messages.characters.charactersEmbed.description', { has_character: characters.characters.length > 0 }),
+			}
 
-		const { charactersFields, charactersButtons } = await getCharactersComponents()
-
-		const charactersEmbed = {
-			color: 0x36393f,
-			title: LanguagesController.content('messages.characters.charactersEmbed.title'),
-			timestamp: new Date().toISOString(),
-			fields: charactersFields,
-			description: LanguagesController.content('messages.characters.charactersEmbed.description', { has_character: characters.characters.length > 0 }),
-		}
-
-		const actionsButtons = [
-			new ButtonBuilder()
-				.setCustomId('create')
-				.setLabel(LanguagesController.content('messages.characters.charactersButtons.create'))
-				.setEmoji('👤')
-				.setStyle(ButtonStyle.Primary)
-				.setDisabled(await ActionController.inAction(interaction.user.id, 'create_character')),
-		]
-
-		if (characters.selected) {
-			actionsButtons.push(
+			const actionsButtons = [
 				new ButtonBuilder()
-					.setCustomId('customize')
-					.setLabel(LanguagesController.content('messages.characters.charactersButtons.customize', { character_name: characters.selected.name }))
-					.setEmoji('1054051525204385882')
-					.setStyle(ButtonStyle.Primary),
-				new ButtonBuilder()
-					.setCustomId('delete')
-					.setLabel(LanguagesController.content('messages.characters.charactersButtons.delete', { character_name: characters.selected.name }))
-					.setStyle(ButtonStyle.Danger),
-				new ButtonBuilder()
-					.setCustomId('sell')
-					.setLabel(LanguagesController.content('messages.characters.charactersButtons.sell', { character_name: characters.selected.name }))
-					.setStyle(ButtonStyle.Success),
-			)
-		}
-
-		const checkButtons = (type) => {
-			return [
-				new ButtonBuilder()
-					.setCustomId('confirm')
-					.setLabel(LanguagesController.content('messages.characters.creationCharacterDefaults.confirm', { option: `{%messages.characters.creationCharacterDefaults.${type.toLowerCase()}Option}` }))
-					.setEmoji('✅')
-					.setStyle(ButtonStyle.Success),
-				new ButtonBuilder()
-					.setCustomId('cancel')
-					.setLabel(LanguagesController.content('messages.characters.creationCharacterDefaults.cancel', { option: `{%messages.characters.creationCharacterDefaults.${type.toLowerCase()}Option}` }))
-					.setEmoji('❌')
-					.setStyle(ButtonStyle.Danger),
+					.setCustomId('create')
+					.setLabel(LanguagesController.content('messages.characters.charactersButtons.create'))
+					.setEmoji('👤')
+					.setStyle(ButtonStyle.Primary)
+					.setDisabled(await ActionController.inAction(interaction.user.id, 'create_character')),
 			]
+
+			const charactersComponents = []
+
+			charactersComponents.push(new ActionRowBuilder().addComponents([...actionsButtons, ...charactersButtons]))
+			if (customButtons.length > 0) charactersComponents.push(new ActionRowBuilder().addComponents(customButtons))
+
+			if (i && !['confirm', 'cancel', 'confirmcreation'].includes(i.customId) && !i.customId.includes('chselect')) {
+				const checkButtons = (type) => {
+					return [
+						new ButtonBuilder()
+							.setCustomId('confirm')
+							.setLabel(LanguagesController.content('messages.characters.creationCharacterDefaults.confirm', { option: `{%messages.characters.creationCharacterDefaults.${type.toLowerCase()}Option}` }))
+							.setEmoji('✅')
+							.setStyle(ButtonStyle.Success),
+						new ButtonBuilder()
+							.setCustomId('cancel')
+							.setLabel(LanguagesController.content('messages.characters.creationCharacterDefaults.cancel', { option: `{%messages.characters.creationCharacterDefaults.${type.toLowerCase()}Option}` }))
+							.setEmoji('❌')
+							.setStyle(ButtonStyle.Danger),
+					]
+				}
+
+				action.check = uppercaseFirstLetter(i.customId)
+				charactersComponents.push(new ActionRowBuilder().addComponents(checkButtons(action.check)))
+				charactersComponents.forEach((row) => {
+					row.components.forEach((button) => {
+						if (button.data.custom_id === i.customId) button.data.disabled = true
+					})
+				})
+			}
+
+			return { charactersEmbed, charactersComponents }
+
 		}
 
-		const charactersComponents = []
-
-		if (charactersButtons.length > 0) charactersComponents.push(new ActionRowBuilder().addComponents(charactersButtons))
-		charactersComponents.push(new ActionRowBuilder().addComponents(actionsButtons))
+		const { charactersEmbed, charactersComponents } = await menuEmbed()
 
 		let charactersMsg
 		try {
@@ -226,17 +261,6 @@ module.exports = class Command extends BaseCommand {
 		const filter = (i) => i.user.id === interaction.user.id
 
 		const collector = charactersMsg.createMessageComponentCollector({ filter, time: 1000 * 60 * 10 })
-
-		const action = {
-			name: '',
-			active: false,
-			step: 0,
-			stepMax: 2,
-			character: {
-				user_id: interaction.user.id,
-			},
-			possiblesConstellations: constellations.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * (5 - 2 + 1) + 2)),
-		}
 
 		const validateCharacter = () => {
 			const stepsValidations = {
@@ -459,9 +483,15 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 			return { creationEmbed, creationComponents }
 		}
 
-		collector.on('update_embed', async (i) => {
+		collector.on('update_embed_creation', async (i) => {
 			const { creationEmbed, creationComponents } = await creationCharacter()
 			return i.editReply({ embeds: [creationEmbed], components: action.concluded ? [] : creationComponents() })
+		})
+
+		collector.on('update_embed_menu', async (i) => {
+			const { charactersEmbed: temp, charactersComponents: temp2 } = await menuEmbed(i)
+
+			return i.editReply({ embeds: [temp], components: temp2 })
 		})
 
 		collector.on('collect', async (i) => {
@@ -472,10 +502,9 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 					if (['selectrace'].includes(i.customId)) {
 						action.character.baseAttributes = races.find((race) => race.value == action.character.race)?.baseAttributes
 					}
-					if (i.customId == 'selectgender' && action.character.name) {
-						collector.emit('update_embed', i)
+					if (!validateCharacter().step.includes(undefined) || (i.customId == 'selectgender' && action.character.name)) {
+						collector.emit('update_embed_creation', i)
 					}
-					if (!validateCharacter().step.includes(undefined)) collector.emit('update_embed', i)
 				})
 			}
 
@@ -524,7 +553,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 						}
 
 						submitted.reply({ content: LanguagesController.content('messages.modals.character_name_modal.success', { character_name }), ephemeral: true })
-						return action.character.gender ? collector.emit('update_embed', i) : null
+						return action.character.gender ? collector.emit('update_embed_creation', i) : null
 					}
 				})
 
@@ -532,23 +561,13 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 
 			i.deferUpdate().then(async () => {
 
-				if (action.check && ['confirm', 'cancel', 'confirmcreation'].includes(i.customId)) return collector.emit('action', i)
+				if (action.check && (['confirm', 'cancel', 'confirmcreation'].includes(i.customId)) || i.customId.includes('chselect')) return collector.emit('action', i)
 
 				if (action.active) return collector.emit('step', i)
 
-				if (!action.check && !['confirm', 'cancel'].includes(i.customId) && !i.customId.includes('select')) {
-					action.check = uppercaseFirstLetter(i.customId)
-					charactersComponents.push(new ActionRowBuilder().addComponents(checkButtons(action.check)))
-					charactersComponents.forEach((row) => {
-						row.components.forEach((button) => {
-							if (button.data.custom_id === i.customId) button.data.disabled = true
-						})
-					})
-					return charactersMsg.edit({ components: charactersComponents })
-				}
+				action.name = i.customId.includes('chselect') ? 'chselect' : i.customId
 
-				action.name = i.customId.includes('select') ? 'select' : i.customId
-
+				collector.emit('update_embed_menu', i)
 
 			})
 		})
@@ -558,26 +577,38 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 				action.step = i.customId === 'next' ? action.step + 1 : action.step - 1
 				action.step = action.step < 0 ? 0 : action.step
 				action.step = action.step > action.stepMax ? action.stepMax : action.step
-				collector.emit('update_embed', i)
+				collector.emit('update_embed_creation', i)
 			}
 		})
 
 		collector.on('action', async (i) => {
 
+			if (i.customId.startsWith('chselect')) {
+				Character.selectCharacter(i.customId.replace('chselect', ''))
+				characters.selected_character = i.customId.replace('chselect', '')
+				collector.emit('update_embed_menu', i)
+				return
+			}
+
 			if (action.check === 'Create' && i.customId === 'confirm') {
 				action.active = true
 				if (await ActionController.inAction(i.user.id, 'create_character')) return i.reply({ content: LanguagesController.content('messages.actions.create_character_already'), ephemeral: true })
 				ActionController.addAction(i.user.id, { id: 'create_character', duration: 60 * 10 })
-				collector.emit('update_embed', i)
+				collector.emit('update_embed_creation', i)
+				return
 			}
 			if (i.customId === 'confirmcreation') {
 				action.concluded = true
 				Character.create(action.character)
-				collector.emit('update_embed', i)
+				collector.emit('update_embed_creation', i)
 				collector.stop()
+				return
 			}
-			else if (action.check === 'Create' && i.customId === 'cancel') {
+			if (i.customId === 'cancel') {
+				// emit('update_embed_menu', i)
 				collector.stop()
+				action.reset()
+				return
 			}
 
 		})

@@ -6,16 +6,27 @@ module.exports = async (client) => {
 	const emeraldManager = new EmeraldManager(client.config.emeraldtoken)
 	const languages = new LanguagesController('pt-BR')
 
-	const res = await emeraldManager.getFiles('nisruemerald', 'languages')
+	async function loadLanguages() {
+		const res = await emeraldManager.getFiles('nisruemerald', 'languages')
 
-	for (const file of res.data) {
-		const content = await emeraldManager.getContent(file.download_url)
-		languages.add(content.data)
+		for (const file of res.data) {
+			const content = await emeraldManager.getContent(file.download_url)
+			languages.add(content.data)
+		}
+
+		client.languages = languages
+
+		console.log(`[LANGUAGE] Loaded ${res.data.length} languages`.green)
 	}
 
-	client.languages = languages
+	async function loadSkins() {
+		const res = await emeraldManager.getFiles('nisruemerald', 'resources/characters/skins')
 
-	console.log(`[LANGUAGE] Loaded ${res.data.length} languages`.green)
+		console.log(res.data)
+	}
+
+	await loadLanguages()
+	await loadSkins()
 
 	return true
 

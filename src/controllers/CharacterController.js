@@ -34,6 +34,10 @@ module.exports = class CharacterController {
 		return this.client.dataManager.get(character_id, `${table}.*`)
 	}
 
+	getCacheSkins() {
+		return this.client.redisCache.get('skins')
+	}
+
 	async getCharacters() {
 
 		const user_data = await this.client.dataManager.get(this.user.id, ['users.selected_character', 'users.characters'])
@@ -85,9 +89,7 @@ module.exports = class CharacterController {
 	}
 
 	selectCharacter(character_id) {
-		return this.client.knexDatabase('users').where('discord_id', this.user.id).update({
-			selected_character: character_id,
-		})
+		return this.client.dataManager.set({ 'users': this.user.id }, { 'users.selected_character': character_id })
 	}
 
 	updateCharacter(character_id, table, data) {
