@@ -19,6 +19,27 @@ module.exports = async (client) => {
 		console.log(`[LANGUAGE] Loaded ${res.data.length} languages`.green)
 	}
 
+	async function loadConfigs() {
+
+		try {
+			const res = await emeraldManager.getFiles('nisruemerald', 'configs')
+
+			if (!res.data) return console.log('[CONFIG] No configs found').red
+
+			for (const file of res.data) {
+				const content = await emeraldManager.getContent(file.download_url)
+				client.redisCache.set(`config:${file.name}`, content.data)
+				console.log(`[CONFIG] Loaded ${file.name}`.green)
+			}
+
+			console.log(`[CONFIG] Loaded ${res.data.length} configs`.green)
+		}
+		catch (error) {
+			console.log('[CONFIG] No configs found'.red)
+		}
+
+	}
+
 	async function loadSkins() {
 		const res = await emeraldManager.getFiles('nisruemerald', 'resources/characters/skins')
 		res.data.forEach(async dir => {
@@ -50,6 +71,7 @@ module.exports = async (client) => {
 		})
 	}
 
+	await loadConfigs()
 	await loadLanguages()
 	await loadSkins()
 

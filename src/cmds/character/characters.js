@@ -7,27 +7,27 @@ const { calculateLevel } = require('../../utils/levelingForms')
 const uppercaseFirstLetter = require('../../utils/uppercaseFirstLetter')
 
 const elements = [
-	{ name: 'fire', value: 'fire', emoji: '🔥', description: 'Fire', selected: true },
-	{ name: 'water', value: 'water', emoji: '💧', description: 'Water', selected: true },
-	{ name: 'earth', value: 'earth', emoji: '🌎', description: 'Earth', selected: true },
-	{ name: 'air', value: 'air', emoji: '💨', description: 'Air', selected: true },
-	{ name: 'light', value: 'light', emoji: '🌞', description: 'Light', selected: true },
-	{ name: 'dark', value: 'dark', emoji: '🌑', description: 'Dark', selected: true },
+	{ name: 'fire', value: 'fire', emoji: '🔥', description: 'Fire', canSelect: true },
+	{ name: 'water', value: 'water', emoji: '💧', description: 'Water', canSelect: true },
+	{ name: 'earth', value: 'earth', emoji: '🌎', description: 'Earth', canSelect: true },
+	{ name: 'air', value: 'air', emoji: '💨', description: 'Air', canSelect: true },
+	{ name: 'light', value: 'light', emoji: '🌞', description: 'Light', canSelect: true },
+	{ name: 'dark', value: 'dark', emoji: '🌑', description: 'Dark', canSelect: true },
 ]
 
 const constellations = [
-	{ name: 'aquarius', value: 'aquarius', emoji: '♒', description: 'Aquarius', selected: true, blessings: ['water', 'air'] },
-	{ name: 'aries', value: 'aries', emoji: '♈', description: 'Aries', selected: true, blessings: ['fire', 'air'] },
-	{ name: 'cancer', value: 'cancer', emoji: '♋', description: 'Cancer', selected: true, blessings: ['water', 'earth'] },
-	{ name: 'capricorn', value: 'capricorn', emoji: '♑', description: 'Capricorn', selected: true, blessings: ['earth', 'fire'] },
-	{ name: 'gemini', value: 'gemini', emoji: '♊', description: 'Gemini', selected: true, blessings: ['air', 'light'] },
-	{ name: 'leo', value: 'leo', emoji: '♌', description: 'Leo', selected: true, blessings: ['fire', 'light'] },
-	{ name: 'libra', value: 'libra', emoji: '♎', description: 'Libra', selected: true, blessings: ['air', 'dark'] },
-	{ name: 'pisces', value: 'pisces', emoji: '♓', description: 'Pisces', selected: true, blessings: ['water', 'dark'] },
-	{ name: 'sagittarius', value: 'sagittarius', emoji: '♐', description: 'Sagittarius', selected: true, blessings: ['earth', 'air'] },
-	{ name: 'scorpio', value: 'scorpio', emoji: '♏', description: 'Scorpio', selected: true, blessings: ['water', 'fire'] },
-	{ name: 'taurus', value: 'taurus', emoji: '♉', description: 'Taurus', selected: true, blessings: ['earth', 'water'] },
-	{ name: 'virgo', value: 'virgo', emoji: '♍', description: 'Virgo', selected: true, blessings: ['earth', 'dark'] },
+	{ name: 'aquarius', value: 'aquarius', emoji: '♒', description: 'Aquarius', canSelect: true, blessings: ['water', 'air'] },
+	{ name: 'aries', value: 'aries', emoji: '♈', description: 'Aries', canSelect: true, blessings: ['fire', 'air'] },
+	{ name: 'cancer', value: 'cancer', emoji: '♋', description: 'Cancer', canSelect: true, blessings: ['water', 'earth'] },
+	{ name: 'capricorn', value: 'capricorn', emoji: '♑', description: 'Capricorn', canSelect: true, blessings: ['earth', 'fire'] },
+	{ name: 'gemini', value: 'gemini', emoji: '♊', description: 'Gemini', canSelect: true, blessings: ['air', 'light'] },
+	{ name: 'leo', value: 'leo', emoji: '♌', description: 'Leo', canSelect: true, blessings: ['fire', 'light'] },
+	{ name: 'libra', value: 'libra', emoji: '♎', description: 'Libra', canSelect: true, blessings: ['air', 'dark'] },
+	{ name: 'pisces', value: 'pisces', emoji: '♓', description: 'Pisces', canSelect: true, blessings: ['water', 'dark'] },
+	{ name: 'sagittarius', value: 'sagittarius', emoji: '♐', description: 'Sagittarius', canSelect: true, blessings: ['earth', 'air'] },
+	{ name: 'scorpio', value: 'scorpio', emoji: '♏', description: 'Scorpio', canSelect: true, blessings: ['water', 'fire'] },
+	{ name: 'taurus', value: 'taurus', emoji: '♉', description: 'Taurus', canSelect: true, blessings: ['earth', 'water'] },
+	{ name: 'virgo', value: 'virgo', emoji: '♍', description: 'Virgo', canSelect: true, blessings: ['earth', 'dark'] },
 ]
 
 const races = [
@@ -36,7 +36,7 @@ const races = [
 		value: 'human',
 		emoji: '👨',
 		description: 'Human',
-		selected: true,
+		canSelect: true,
 		history: 'Human history',
 		baseAttributes: {
 			strength: 1,
@@ -52,7 +52,7 @@ const races = [
 		value: 'elf',
 		emoji: '🧝',
 		description: 'Elf',
-		selected: true,
+		canSelect: true,
 		history: 'Elf history',
 		baseAttributes: {
 			strength: 1,
@@ -68,7 +68,7 @@ const races = [
 		value: 'dwarf',
 		emoji: '🧔',
 		description: 'Dwarf',
-		selected: true,
+		canSelect: true,
 		history: 'Dwarf history',
 		baseAttributes: {
 			strength: 1,
@@ -84,7 +84,7 @@ const races = [
 		value: 'orc',
 		emoji: '👹',
 		description: 'Orc',
-		selected: true,
+		canSelect: true,
 		history: 'Orc history',
 		baseAttributes: {
 			strength: 1,
@@ -100,7 +100,7 @@ const races = [
 		value: 'gnome',
 		emoji: '🧙',
 		description: 'Gnome',
-		selected: true,
+		canSelect: true,
 		history: 'Gnome history',
 		baseAttributes: {
 			strength: 1,
@@ -385,7 +385,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 						new StringSelectMenuBuilder()
 							.setCustomId('selectrace')
 							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%nouns.race}' }))
-							.addOptions(races.filter(race => race.selected).map((race) => {
+							.addOptions(races.filter(race => race.canSelect).map((race) => {
 								return {
 									label: race.name,
 									value: race.value,
@@ -399,7 +399,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 						new StringSelectMenuBuilder()
 							.setCustomId('selectelement')
 							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%nouns.element}' }))
-							.addOptions(elements.filter(element => element.selected).map((element) => {
+							.addOptions(elements.filter(element => element.canSelect).map((element) => {
 								return {
 									label: element.name,
 									value: element.value,
