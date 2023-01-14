@@ -1,5 +1,6 @@
 const randomString = require('../utils/randomString')
 const Canvas = require('canvas')
+const { createCanvas, loadImage } = Canvas
 
 module.exports = class CharacterController {
 	constructor(client, user) {
@@ -20,15 +21,80 @@ module.exports = class CharacterController {
 		return skin
 	}
 
-	async makeSkin(character_id, part, paths) {
-		const { createCanvas, loadImage } = Canvas
+	async makeSkinBuffer(components) {
+
 		const canvas = createCanvas(250, 250)
 		const ctx = canvas.getContext('2d')
 
-		for (const path of paths) {
-			const imagebuffer = await this.client.redisCache.get(`skins:${path}`)
-			const image = await loadImage(imagebuffer)
-			ctx.drawImage(image, 0, 0, 250, 250)
+		/*
+			component:
+			{
+				"part": "top",
+				"skin": {
+					"name": "teste.png",
+					"buffer": {
+						"type": "Buffer",
+						"data":  [...]
+					},
+					"base64": "",
+					"path": "resources/skins/characters/top/teste.png",
+					"size": 442,
+				}
+				"color": "#ffffff",
+				**DEPRECATED** "filters": ["grayscale", "invert", "sepia", "blur", "brightness", "contrast", "saturate", "hue-rotate"],
+				"position": { x: 0, y: 0 },
+				"rotation": 0,
+				"scale": 1,
+				"opacity": 1,
+				"flip": false,
+				"mirror": false,
+				"layer": 0,
+			}
+			layer: index of the component
+		*/
+
+		const layers = []
+
+		for (const component of components) {
+
+			if (component.skin == null) return console.log(`[SKIN] Component ${component.part} is null`, component)
+
+			const buffer = Buffer.from(component.skin.buffer.data)
+
+			const image = await loadImage(buffer)
+
+			layers.push({
+				image,
+				component,
+			})
+
+		}
+
+		layers.sort((a, b) => a.component.layer - b.component.layer)
+
+		for (const layer of layers) {
+
+			ctx.save()
+
+			ctx.translate(layer.component.position.x, layer.component.position.y)
+			ctx.rotate(layer.component.rotation * Math.PI / 180)
+			ctx.scale(layer.component.scale, layer.component.scale)
+			ctx.globalAlpha = layer.component.opacity
+
+			if (layer.component.flip) {
+				ctx.scale(-1, 1)
+				ctx.translate(-layer.image.width, 0)
+			}
+
+			if (layer.component.mirror) {
+				ctx.scale(1, -1)
+				ctx.translate(0, -layer.image.height)
+			}
+
+			ctx.drawImage(layer.image, 0, 0)
+
+			ctx.restore()
+
 		}
 
 		const buffer = canvas.toBuffer('image/png')

@@ -34,7 +34,7 @@ module.exports = {
 		const time = Math.round(process.uptime())
 		console.log(`\n     Bot started in ${time}s\n`.green)
 
-		process.on('unhandledRejection', (reason, promise) => {
+		/*process.on('unhandledRejection', (reason, promise) => {
 			console.log(`[ERROR] Unhandled Rejection at: ${promise}, reason: ${reason}`.red)
 		})
 
@@ -44,7 +44,7 @@ module.exports = {
 
 		process.on('exit', (code) => {
 			console.log(`[INFO] Process exited with code: ${code}`.yellow)
-		})
+		})*/
 
 	},
 

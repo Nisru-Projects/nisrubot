@@ -36,11 +36,16 @@ module.exports = async (client) => {
 									size: file.size,
 									buffer: content.data,
 								}
+								skinData.base64 = Buffer.from(skinData.buffer).toString('base64')
 								client.redisCache.set(`skins:${skinData.path}`, JSON.stringify(skinData))
 							}
 						})
 					}
 				})
+			}
+			else {
+				const content = await emeraldManager.getContent(dir.download_url)
+				client.redisCache.set('skins:data', JSON.stringify(content.data))
 			}
 		})
 	}

@@ -1,5 +1,5 @@
 const BaseCommand = require('../../utils/BaseCommand')
-const { ActionRowBuilder, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder } = require('discord.js')
+const { ActionRowBuilder, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js')
 const disableAllComponents = require('../../utils/disableAllComponents')
 const CharacterController = require('../../controllers/CharacterController')
 const ActionsController = require('../../controllers/ActionsController')
@@ -504,62 +504,9 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 			return { creationEmbed, creationComponents }
 		}
 
-		const customCharacter = async () => {
-			const customEmbed = new EmbedBuilder()
-				.setTitle(LanguagesController.content('messages.characters.customCharacter.title'))
-				.setDescription(LanguagesController.content('messages.characters.customCharacter.description'))
-				.setColor('#313236')
-				.setImage('https://i.imgur.com/FBicrHc.png')
-
-			if (action.custom === 'top') {
-				customEmbed.setColor('#0000ff')
-			}
-			else if (action.custom === 'mid') {
-				customEmbed.setColor('#00ff00')
-			}
-			else if (action.custom === 'random') {
-				customEmbed.setColor('#ff0000')
-			}
-
-			const customComponents = [
-				new ActionRowBuilder().addComponents([
-					new StringSelectMenuBuilder()
-						.setCustomId('selectcustom')
-						.setPlaceholder(LanguagesController.content('messages.characters.customCharacter.description'))
-						.addOptions([
-							{
-								label: LanguagesController.content('nouns.top'),
-								value: 'top',
-								emoji: '🔵',
-								default: action.custom === 'top',
-							},
-							{
-								label: LanguagesController.content('nouns.mid'),
-								value: 'mid',
-								emoji: '🟢',
-								default: action.custom === 'mid',
-							},
-							{
-								label: LanguagesController.content('nouns.bot'),
-								value: 'bot',
-								emoji: '🔴',
-								default: action.custom === 'bot',
-							},
-						]),
-				]),
-			]
-
-			return { customEmbed, customComponents }
-		}
-
 		collector.on('update_embed_creation', async (i) => {
 			const { creationEmbed, creationComponents } = await creationCharacter()
 			return i.editReply({ embeds: [creationEmbed], components: action.concluded ? [] : creationComponents() })
-		})
-
-		collector.on('update_embed_custom', async (i) => {
-			const { customEmbed, customComponents } = await customCharacter()
-			return i.editReply({ embeds: [customEmbed], components: action.concluded ? [] : customComponents })
 		})
 
 		collector.on('update_embed_menu', async (i) => {
@@ -571,11 +518,18 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 		collector.on('collect', async (i) => {
 
 			if (i.isStringSelectMenu()) {
+
+				if (i.customId.startsWith('chactionmenu')) {
+					const value = i.values[0]
+					collector.resetTimer()
+					if (value == 'customize') {
+						collector.stop()
+						return this.client.commands.get(this.client.languages.content('commands.customcharacter.name'))?.execute(i, characters)
+					}
+				}
+
 				i.deferUpdate().then(async () => {
 					if ([...Object.keys(action.character), 'selectgamemode'].includes(i.customId)) {
-
-						console.log('active select type', action)
-
 						action.character[i.customId.replace('select', '')] = i.values[0]
 						if (['selectrace'].includes(i.customId)) {
 							action.character.baseAttributes = races.find((race) => race.value == action.character.race)?.baseAttributes
@@ -589,17 +543,6 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 						Character.selectCharacter(characterid)
 						characters.selected_character = characterid
 						return
-					}
-
-					if (i.customId.startsWith('chactionmenu')) {
-						const value = i.values[0]
-						const characterid = i.customId.replace('chactionmenu', '')
-						collector.resetTimer()
-						if (value == 'customize') {
-							action.character = characters.characters.find((ch) => ch.id == characterid)
-							action.active = true
-							collector.emit('update_embed_custom', i)
-						}
 					}
 
 					if (i.customid == 'selectcustom') {
