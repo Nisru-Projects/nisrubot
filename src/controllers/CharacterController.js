@@ -29,15 +29,11 @@ module.exports = class CharacterController {
 		/*
 			component:
 			{
-				"part": "top",
+				"part": "avatar",
 				"skin": {
 					"name": "teste.png",
-					"buffer": {
-						"type": "Buffer",
-						"data":  [...]
-					},
-					"base64": "",
-					"path": "resources/skins/characters/top/teste.png",
+					"data": base64,
+					"path": "resources/skins/characters/avatar/teste.png",
 					"size": 442,
 				}
 				"color": "#ffffff",
@@ -50,7 +46,6 @@ module.exports = class CharacterController {
 				"mirror": false,
 				"layer": 0,
 			}
-			layer: index of the component
 		*/
 
 		const layers = []
@@ -59,7 +54,7 @@ module.exports = class CharacterController {
 
 			if (component.skin == null) return console.log(`[SKIN] Component ${component.part} is null`, component)
 
-			const buffer = Buffer.from(component.skin.buffer.data)
+			const buffer = Buffer.from(component.skin.data, 'base64')
 
 			const image = await loadImage(buffer)
 

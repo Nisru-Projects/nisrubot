@@ -1,8 +1,9 @@
 const BaseCommand = require('../../utils/BaseCommand')
-const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, ButtonBuilder, AttachmentBuilder } = require('discord.js')
+const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js')
 const disableAllComponents = require('../../utils/disableAllComponents')
 const CharacterController = require('../../controllers/CharacterController')
 const ActionsController = require('../../controllers/ActionsController')
+const randomString = require('../../utils/randomString')
 
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
@@ -12,7 +13,7 @@ module.exports = class Command extends BaseCommand {
 			permissions: ['user'],
 		})
 	}
-	async execute(interaction, characters) {
+	async execute(interaction) {
 
 		const ActionController = new ActionsController(this.client.redisCache)
 
@@ -20,22 +21,28 @@ module.exports = class Command extends BaseCommand {
 			return interaction.reply({ content: this.client.languages.content('messages.actions.customcharacter_command_already'), ephemeral: true })
 		}
 
-		await ActionController.addAction(interaction.user.id, { id: 'customcharacter_command', duration: 60 * 12 })
+		if (await ActionController.inAction(interaction.user.id, 'use_character')) {
+			return interaction.reply({ content: this.client.languages.content('messages.actions.use_character_already'), ephemeral: true })
+		}
+
+		const command_handler = randomString(16)
+
+		await ActionController.addAction(interaction.user.id, { id: 'customcharacter_command', duration: 60 * 12, handler: command_handler })
+		await ActionController.addAction(interaction.user.id, { id: 'use_character', handler: command_handler, type: 'customcharacter' })
 
 		const LanguagesController = this.client.languages
 
 		const Character = new CharacterController(this.client, interaction.user)
 
 		const action = {
-			reset: () => {
+			reset: async () => {
 				action.user_id = interaction.user.id
 				action.parts = new Map()
+				action.dataparts = JSON.parse(await this.client.redisCache.get('config:skins.json'))
 			},
 		}
 
 		action.reset()
-
-		action.dataparts = JSON.parse(await this.client.redisCache.get('skins:data'))
 
 		const customCharacter = async () => {
 			const customEmbed = new EmbedBuilder()
@@ -44,10 +51,10 @@ module.exports = class Command extends BaseCommand {
 				.setColor('#313236')
 				.setImage('https://i.imgur.com/FBicrHc.png')
 
-			if (action.custom === 'top') {
+			if (action.custom === 'avatar') {
 				customEmbed.setColor('#0000ff')
 			}
-			else if (action.custom === 'mid') {
+			else if (action.custom === 'equips') {
 				customEmbed.setColor('#00ff00')
 			}
 			else if (action.custom === 'random') {
@@ -61,22 +68,22 @@ module.exports = class Command extends BaseCommand {
 						.setPlaceholder(LanguagesController.content('messages.characters.customCharacter.description'))
 						.addOptions([
 							{
-								label: LanguagesController.content('nouns.top'),
-								value: 'top',
+								label: LanguagesController.content('nouns.avatar'),
+								value: 'avatar',
 								emoji: '🔵',
-								default: action.custom === 'top',
+								default: action.custom === 'avatar',
 							},
 							{
-								label: LanguagesController.content('nouns.mid'),
-								value: 'mid',
+								label: LanguagesController.content('nouns.equips'),
+								value: 'equips',
 								emoji: '🟢',
-								default: action.custom === 'mid',
+								default: action.custom === 'equips',
 							},
 							{
-								label: LanguagesController.content('nouns.bot'),
-								value: 'bot',
+								label: LanguagesController.content('nouns.poses'),
+								value: 'poses',
 								emoji: '🔴',
-								default: action.custom === 'bot',
+								default: action.custom === 'poses',
 							},
 						]),
 				]),
@@ -87,19 +94,17 @@ module.exports = class Command extends BaseCommand {
 
 		const getCustomMenus = async () => {
 
-			const actions = [ { name: 'home', emoji: '🏠' }, { name: 'update', emoji: '🔄' }, { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'reset', emoji: '🔁' } ]
+			const actions = [ { name: 'home', emoji: '🏠' }, { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'reset', emoji: '🔁' } ]
 
 			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'size', emoji: '📐' }, { name: 'flip', emoji: '🔴' }, { name: 'mirror', emoji: '🪞' }, { name: 'filter', emoji: '🔴' } ]
 
-			const partsbackgrounds = [ { part: 'top', background: 'https://i.imgur.com/UFuYQoU.png' }, { part: 'mid', background: 'https://i.imgur.com/tD3Sy5z.png' }, { part: 'bot', background: 'https://i.imgur.com/SOhtuh4.png' } ]
+			const partsbackgrounds = [ { part: 'avatar', background: 'https://i.imgur.com/UFuYQoU.png' }, { part: 'equips', background: 'https://i.imgur.com/tD3Sy5z.png' }, { part: 'poses', background: 'https://i.imgur.com/SOhtuh4.png' } ]
 
-			const parts = Object.keys(action.dataparts.all[action.custom])
+			const parts = Object.keys(action.dataparts.all)
 
-			const skincomponents = action.dataparts.all[action.custom][action.selectedpart] || ['default']
+			const skincomponents = action.dataparts.all[action.selectedpart] || ['default']
 
 			const skinAttachment = action.skinBuffer ? new AttachmentBuilder(action.skinBuffer, { name: 'skin.png' }) : null
-
-			console.log('skinAttach', skinAttachment)
 
 			const menuEmbed = new EmbedBuilder()
 				.setTitle(LanguagesController.content('messages.characters.customCharacter.title'))
@@ -108,9 +113,9 @@ module.exports = class Command extends BaseCommand {
 				.setImage(skinAttachment ? 'attachment://skin.png' : partsbackgrounds.find((part) => part.part === action.custom).background)
 
 			const customColor = {
-				top: '#0000ff',
-				mid: '#00ff00',
-				bot: '#ff0000',
+				avatar: '#0000ff',
+				equips: '#00ff00',
+				poses: '#ff0000',
 			}
 
 			menuEmbed.setColor(customColor[action.custom])
@@ -152,7 +157,7 @@ module.exports = class Command extends BaseCommand {
 								label: `${LanguagesController.content('nouns.component')}: ${skincomponent}`,
 								value: skincomponent,
 								emoji: '🥪',
-								default: action.selectedcomponent === skincomponent,
+								default: action.parts.get(action.selectedpart)?.component === skincomponent,
 							}
 						})),
 				]),
@@ -183,7 +188,7 @@ module.exports = class Command extends BaseCommand {
 		}
 		catch (error) {
 			console.log(error)
-			return ActionController.removeAction(interaction.user.id, ['customcharacter_command'])
+			return ActionController.removeAction(interaction.user.id, ['customcharacter_command', 'use_character'])
 		}
 
 		const filter = (i) => i.user.id === interaction.user.id
@@ -200,8 +205,11 @@ module.exports = class Command extends BaseCommand {
 				if (i.customId === 'makeaction') {
 					action.action = i.values[0]
 
-					if (action.action === 'update') {
-						return collector.emit('update_skin')
+					if (action.action === 'reset') {
+						await action.reset()
+						action.custom = 'avatar'
+						collector.emit('update_menu_message')
+						return
 					}
 
 				}
@@ -223,9 +231,10 @@ module.exports = class Command extends BaseCommand {
 				else if (i.customId === 'selectcomponent') {
 					action.selectedcomponent = i.values[0]
 
-					const skindata = await this.client.redisCache.get(`skins:resources/characters/skins/${action.custom}/${action.selectedpart}/${action.selectedcomponent}.png`)
+					const skindata = await this.client.redisCache.get(`skins:resources/characters/skins/${action.selectedpart}/${action.selectedcomponent}.png`)
 
-					action.parts.set(`${action.selectedpart}/${action.selectedcomponent}`, {
+					action.parts.set(action.selectedpart, {
+						component: action.selectedcomponent,
 						part: action.selectedpart,
 						skin: JSON.parse(skindata),
 						color: '#ffffff',
@@ -246,7 +255,7 @@ module.exports = class Command extends BaseCommand {
 		})
 
 		collector.on('end', async () => {
-			ActionController.removeAction(interaction.user.id, ['customcharacter_command'])
+			ActionController.removeAction(interaction.user.id, ['customcharacter_command', 'use_character'])
 			if (action.concluded) return
 			const newCharactersMsg = await interaction.channel.messages.fetch(customMsg.id)
 

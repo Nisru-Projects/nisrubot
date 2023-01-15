@@ -22,14 +22,13 @@ module.exports = async (client) => {
 	async function loadConfigs() {
 
 		try {
-			const res = await emeraldManager.getFiles('nisruemerald', 'configs')
+			const res = await emeraldManager.getFiles('nisruemerald', 'resources/configs')
 
 			if (!res.data) return console.log('[CONFIG] No configs found').red
 
 			for (const file of res.data) {
 				const content = await emeraldManager.getContent(file.download_url)
-				client.redisCache.set(`config:${file.name}`, content.data)
-				console.log(`[CONFIG] Loaded ${file.name}`.green)
+				client.redisCache.set(`config:${file.name}`, JSON.stringify(content.data))
 			}
 
 			console.log(`[CONFIG] Loaded ${res.data.length} configs`.green)
@@ -42,31 +41,21 @@ module.exports = async (client) => {
 
 	async function loadSkins() {
 		const res = await emeraldManager.getFiles('nisruemerald', 'resources/characters/skins')
-		res.data.forEach(async dir => {
-			if (dir.type === 'dir') {
-				const bodypart = await emeraldManager.getFiles('nisruemerald', `resources/characters/skins/${dir.name}`)
-				bodypart.data.forEach(async type => {
-					if (type.type === 'dir') {
-						const files = await emeraldManager.getFiles('nisruemerald', `resources/characters/skins/${dir.name}/${type.name}`)
-						files.data.forEach(async file => {
-							if (file.type === 'file') {
-								const content = await emeraldManager.getContent(file.download_url, true)
-								const skinData = {
-									name: file.name,
-									path: file.path,
-									size: file.size,
-									buffer: content.data,
-								}
-								skinData.base64 = Buffer.from(skinData.buffer).toString('base64')
-								client.redisCache.set(`skins:${skinData.path}`, JSON.stringify(skinData))
-							}
-						})
+		res.data.forEach(async type => {
+			if (type.type === 'dir') {
+				const files = await emeraldManager.getFiles('nisruemerald', `resources/characters/skins/${type.name}`)
+				files.data.forEach(async file => {
+					if (file.type === 'file') {
+						const content = await emeraldManager.getContent(file.download_url, true)
+						const skinData = {
+							name: file.name,
+							path: file.path,
+							size: file.size,
+							data: content.data,
+						}
+						client.redisCache.set(`skins:${skinData.path}`, JSON.stringify(skinData))
 					}
 				})
-			}
-			else {
-				const content = await emeraldManager.getContent(dir.download_url)
-				client.redisCache.set('skins:data', JSON.stringify(content.data))
 			}
 		})
 	}

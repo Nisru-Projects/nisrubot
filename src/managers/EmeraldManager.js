@@ -22,11 +22,12 @@ module.exports = class EmeraldManager {
 		})
 	}
 
-	getContent(download_url, buffer = false) {
-		if (buffer) {
+	getContent(download_url, data64 = false) {
+		if (data64) {
 			return axios.get(download_url, {
 				headers: this.headers,
 				responseType: 'arraybuffer',
+				transformResponse: [data => Buffer.from(data, 'binary').toString('base64')],
 			})
 		}
 		return axios.get(download_url, {

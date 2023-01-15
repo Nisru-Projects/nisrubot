@@ -5,6 +5,7 @@ const CharacterController = require('../../controllers/CharacterController')
 const ActionsController = require('../../controllers/ActionsController')
 const { calculateLevel } = require('../../utils/levelingForms')
 const uppercaseFirstLetter = require('../../utils/uppercaseFirstLetter')
+const randomString = require('../../utils/randomString')
 
 const elements = [
 	{ name: 'fire', value: 'fire', emoji: '🔥', description: 'Fire', canSelect: true },
@@ -129,7 +130,14 @@ module.exports = class Command extends BaseCommand {
 			return interaction.reply({ content: this.client.languages.content('messages.actions.characters_command_already'), ephemeral: true })
 		}
 
-		await ActionController.addAction(interaction.user.id, { id: 'characters_command', duration: 60 * 12 })
+		if (await ActionController.inAction(interaction.user.id, 'use_character')) {
+			return interaction.reply({ content: this.client.languages.content('messages.actions.use_character_already'), ephemeral: true })
+		}
+
+		const command_handler = randomString(16)
+
+		await ActionController.addAction(interaction.user.id, { id: 'characters_command', duration: 60 * 12, handler: command_handler })
+		await ActionController.addAction(interaction.user.id, { id: 'use_character', handler: command_handler, type: 'characters' })
 
 		const LanguagesController = this.client.languages
 
@@ -149,19 +157,17 @@ module.exports = class Command extends BaseCommand {
 
 		action.reset()
 
-		const checkButtons = (type) => {
-			return [
-				new ButtonBuilder()
-					.setCustomId('confirm')
-					.setLabel(LanguagesController.content('messages.characters.creationCharacterDefaults.confirm', { option: `{%messages.characters.creationCharacterDefaults.${type.toLowerCase()}Option}` }))
-					.setEmoji('✅')
-					.setStyle(ButtonStyle.Success),
-				new ButtonBuilder()
-					.setCustomId('cancel')
-					.setLabel(LanguagesController.content('messages.characters.creationCharacterDefaults.cancel', { option: `{%messages.characters.creationCharacterDefaults.${type.toLowerCase()}Option}` }))
-					.setEmoji('❌')
-					.setStyle(ButtonStyle.Danger),
-			]
+		const checkButton = (charactersComponents, buttonCustomId) => {
+			charactersComponents.forEach((row) => {
+				row.components.forEach((button) => {
+					if (button.data.custom_id === buttonCustomId) {
+						button.data.label = LanguagesController.content('messages.characters.creationCharacterDefaults.confirm', { option: '{%messages.characters.creationCharacterDefaults.createOption}' })
+						button.data.custom_id = 'confirm'
+						button.data.emoji = { name: '✅' }
+						button.data.style = ButtonStyle.Success
+					}
+				})
+			})
 		}
 
 		async function menuEmbed(i) {
@@ -256,12 +262,7 @@ module.exports = class Command extends BaseCommand {
 
 			if (i && !['confirm', 'cancel', 'confirmcreation'].includes(i.customId) && !i.customId.includes('chselect')) {
 				action.check = uppercaseFirstLetter(i.customId)
-				charactersComponents.push(new ActionRowBuilder().addComponents(checkButtons(action.check)))
-				charactersComponents.forEach((row) => {
-					row.components.forEach((button) => {
-						if (button.data.custom_id === i.customId) button.data.disabled = true
-					})
-				})
+				checkButton(charactersComponents, i.customId)
 			}
 
 			return { charactersEmbed, charactersComponents }
@@ -276,7 +277,7 @@ module.exports = class Command extends BaseCommand {
 		}
 		catch (error) {
 			console.log(error)
-			return ActionController.removeAction(interaction.user.id, ['characters_command'])
+			return ActionController.removeAction(interaction.user.id, ['characters_command', 'use_character'])
 		}
 
 		const filter = (i) => i.user.id === interaction.user.id
@@ -523,6 +524,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 					const value = i.values[0]
 					collector.resetTimer()
 					if (value == 'customize') {
+						await ActionController.removeAction(interaction.user.id, ['create_character', 'characters_command', 'use_character'])
 						collector.stop()
 						return this.client.commands.get(this.client.languages.content('commands.customcharacter.name'))?.execute(i, characters)
 					}
@@ -644,7 +646,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 		})
 
 		collector.on('end', async () => {
-			ActionController.removeAction(interaction.user.id, ['create_character', 'characters_command'])
+			ActionController.removeAction(interaction.user.id, ['create_character', 'characters_command', 'use_character'])
 			if (action.concluded) return
 			const newCharactersMsg = await interaction.channel.messages.fetch(charactersMsg.id)
 

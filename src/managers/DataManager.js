@@ -25,7 +25,7 @@ module.exports = class DataManager {
 				const data = await this.knexDatabase.raw(`SELECT * FROM ${table}`)
 				backupData[table] = data
 			}
-			const formattedDate = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/\//g, '-').replace(/:/g, '-').replace(/ /g, '_')
+			const formattedDate = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/\//g, '-').replace(/:/g, '-').replace(/ /g, '_').replace(/,/g, '')
 			const backupPath = path.join(__dirname, '..', '..', 'backups', `${formattedDate}.json`)
 			const backupDataString = JSON.stringify(backupData, null, 2)
 			fs.writeFileSync(backupPath, backupDataString)
@@ -54,11 +54,18 @@ module.exports = class DataManager {
 
 	restoreBackup(backupPath) {
 		return new Promise(async (resolve) => {
-			const backupData = require(backupPath)
+			const backupData = JSON.parse(fs.readFileSync(backupPath))
 			const tables = Object.keys(backupData)
 			for (const table of tables) {
-				await this.knexDatabase(table).del()
-				await this.knexDatabase(table).insert(backupData[table])
+				await this.knexDatabase.raw(`DROP TABLE IF EXISTS ${table}`)
+				await this.knexDatabase.raw(backupData[table].command)
+				const rows = backupData[table].rows
+				for (const row of rows) {
+					const columns = Object.keys(row)
+					const values = Object.values(row)
+					const query = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map((column, index) => `$${index + 1}`).join(', ')})`
+					await this.knexDatabase.raw(query, values)
+				}
 			}
 			resolve()
 		})
