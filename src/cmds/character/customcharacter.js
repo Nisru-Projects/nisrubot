@@ -39,6 +39,9 @@ module.exports = class Command extends BaseCommand {
 				action.user_id = interaction.user.id
 				action.parts = new Map()
 				action.dataparts = JSON.parse(await this.client.redisCache.get('config:skins.json'))
+				action.selectedpart = undefined
+				action.skinBuffer = undefined
+				action.selectedcomponent = undefined
 			},
 		}
 
@@ -46,14 +49,10 @@ module.exports = class Command extends BaseCommand {
 
 		const getCustomMenus = async () => {
 
-			const actions = [ { name: 'home', emoji: '🏠' }, { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'reset', emoji: '🔁' } ]
-
-			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'size', emoji: '📐' }, { name: 'flip', emoji: '🔴' }, { name: 'mirror', emoji: '🪞' }, { name: 'filter', emoji: '🔴' } ]
-
 			const parts = Object.keys(action.dataparts.all)
-
+			const actions = [ { name: 'home', emoji: '🏠' }, { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'templates', emoji: '📋' }, { name: 'reset', emoji: '🔁' } ]
+			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'size', emoji: '📐' }, { name: 'flip', emoji: '🔴' }, { name: 'mirror', emoji: '🪞' }, { name: 'filter', emoji: '🔴' } ]
 			const skincomponents = action.dataparts.all[action.selectedpart] || ['default']
-
 			const skinAttachment = action.skinBuffer ? new AttachmentBuilder(action.skinBuffer, { name: 'skin.png' }) : null
 
 			const menuEmbed = new EmbedBuilder()
@@ -63,59 +62,72 @@ module.exports = class Command extends BaseCommand {
 				.setImage(skinAttachment ? 'attachment://skin.png' : 'https://i.imgur.com/UFuYQoU.png')
 				.setColor('#0000ff')
 
+			const menuOptions = {
+				'actions': actions.map((clickaction) => {
+					return {
+						label: LanguagesController.content(`nouns.${clickaction.name}`),
+						value: clickaction.name,
+						emoji: clickaction.emoji,
+					}
+				}),
+				'parts': parts.map((part) => {
+					return {
+						label: LanguagesController.content(`nouns.${part}`),
+						value: part,
+						emoji: '👋',
+						default: action.selectedpart === part,
+					}
+				}),
+				'skincomponents': skincomponents.map((skincomponent) => {
+					return {
+						label: `${LanguagesController.content('nouns.component')}: ${skincomponent}`,
+						value: skincomponent,
+						emoji: '🥪',
+						default: action.parts.get(action.selectedpart)?.component === skincomponent,
+					}
+				}),
+				'editcomponents': editcomponents.map((editcomponent) => {
+					return {
+						label: LanguagesController.content(`nouns.${editcomponent.name}`),
+						value: editcomponent.name,
+						emoji: editcomponent.emoji,
+					}
+				}),
+			}
+
+			menuOptions.skincomponents.unshift({
+				label: LanguagesController.content('nouns.none'),
+				value: 'none',
+				emoji: '🥪',
+				default: action.parts.get(action.selectedpart)?.component === 'none' || !action.parts.get(action.selectedpart)?.component,
+			})
+
 			const menuComponents = [
 				new ActionRowBuilder().addComponents([
 					new StringSelectMenuBuilder()
 						.setCustomId('makeaction')
 						.setPlaceholder(LanguagesController.content('nouns.makeaction'))
-						// eslint-disable-next-line no-shadow
-						.addOptions(actions.map((action) => {
-							return {
-								label: LanguagesController.content(`nouns.${action.name}`),
-								value: action.name,
-								emoji: action.emoji,
-							}
-						})),
+						.addOptions(menuOptions.actions),
 				]),
 				new ActionRowBuilder().addComponents([
 					new StringSelectMenuBuilder()
 						.setCustomId('selectpart')
 						.setPlaceholder(LanguagesController.content('messages.characters.customCharacter.selectpart'))
-						.addOptions(parts.map((part) => {
-							return {
-								label: LanguagesController.content(`nouns.${part}`),
-								value: part,
-								emoji: '👋',
-								default: action.selectedpart === part,
-							}
-						})),
+						.addOptions(menuOptions.parts),
 				]),
 				new ActionRowBuilder().addComponents([
 					new StringSelectMenuBuilder()
 						.setCustomId('selectcomponent')
 						.setPlaceholder(LanguagesController.content('messages.characters.customCharacter.selectcomponent'))
 						.setDisabled(action.selectedpart ? false : true)
-						.addOptions(skincomponents.map((skincomponent) => {
-							return {
-								label: `${LanguagesController.content('nouns.component')}: ${skincomponent}`,
-								value: skincomponent,
-								emoji: '🥪',
-								default: action.parts.get(action.selectedpart)?.component === skincomponent,
-							}
-						})),
+						.addOptions(menuOptions.skincomponents),
 				]),
 				new ActionRowBuilder().addComponents([
 					new StringSelectMenuBuilder()
 						.setCustomId('editcomponent')
 						.setPlaceholder(LanguagesController.content('nouns.editcomponent'))
 						.setDisabled(action.selectedcomponent ? false : true)
-						.addOptions(editcomponents.map((editcomponent) => {
-							return {
-								label: LanguagesController.content(`nouns.${editcomponent.name}`),
-								value: editcomponent.name,
-								emoji: editcomponent.emoji,
-							}
-						})),
+						.addOptions(menuOptions.editcomponents),
 				]),
 			]
 
@@ -148,14 +160,18 @@ module.exports = class Command extends BaseCommand {
 			i.deferUpdate().then(async () => {
 				if (i.customId === 'makeaction') {
 					action.action = i.values[0]
-
 					if (action.action === 'reset') {
 						await action.reset()
-						action.custom = 'avatar'
 						collector.emit('update_menu_message')
 						return
 					}
-
+					else if (action.action === 'cancel') {
+						return collector.stop()
+					}
+					else if (action.action === 'save') {
+						action.concluded = true
+						return collector.stop()
+					}
 				}
 				else if (i.customId === 'selectpart') {
 					action.selectedpart = i.values[0]
@@ -164,25 +180,29 @@ module.exports = class Command extends BaseCommand {
 				else if (i.customId === 'selectcomponent') {
 					action.selectedcomponent = i.values[0]
 
-					const skindata = await this.client.redisCache.get(`skins:resources/characters/skins/${action.selectedpart}/${action.selectedcomponent}.png`)
-
-					action.parts.set(action.selectedpart, {
-						component: action.selectedcomponent,
-						part: action.selectedpart,
-						skin: JSON.parse(skindata),
-						color: '#ffffff',
-						position: { x: 0, y: 0 },
-						rotation: 0,
-						scale: 1,
-						opacity: 1,
-						flip: false,
-						mirror: false,
-						layer: 0,
-					})
+					if (action.selectedcomponent === 'none') {
+						action.parts.delete(action.selectedpart)
+					}
+					else {
+						const skindata = await this.client.redisCache.get(`skins:resources/characters/skins/${action.selectedpart}/${action.selectedcomponent}.png`)
+						action.parts.set(action.selectedpart, {
+							component: action.selectedcomponent,
+							part: action.selectedpart,
+							skin: JSON.parse(skindata),
+							color: '#ffffff',
+							position: { x: 0, y: 0 },
+							rotation: 0,
+							scale: 1,
+							opacity: 1,
+							flip: false,
+							mirror: false,
+							layer: 0,
+						})
+					}
 
 					action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
 
-					await collector.emit('update_menu_message')
+					collector.emit('update_menu_message')
 				}
 			})
 		})
@@ -191,7 +211,6 @@ module.exports = class Command extends BaseCommand {
 			ActionController.removeAction(interaction.user.id, ['customcharacter_command', 'use_character'])
 			if (action.concluded) return
 			const newCharactersMsg = await interaction.channel.messages.fetch(customMsg.id)
-
 			disableAllComponents(newCharactersMsg)
 		})
 
