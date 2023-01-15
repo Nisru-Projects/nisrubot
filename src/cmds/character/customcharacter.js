@@ -42,63 +42,13 @@ module.exports = class Command extends BaseCommand {
 			},
 		}
 
-		action.reset()
-
-		const customCharacter = async () => {
-			const customEmbed = new EmbedBuilder()
-				.setTitle(LanguagesController.content('messages.characters.customCharacter.title'))
-				.setDescription(LanguagesController.content('messages.characters.customCharacter.description'))
-				.setColor('#313236')
-				.setImage('https://i.imgur.com/FBicrHc.png')
-
-			if (action.custom === 'avatar') {
-				customEmbed.setColor('#0000ff')
-			}
-			else if (action.custom === 'equips') {
-				customEmbed.setColor('#00ff00')
-			}
-			else if (action.custom === 'random') {
-				customEmbed.setColor('#ff0000')
-			}
-
-			const customComponents = [
-				new ActionRowBuilder().addComponents([
-					new StringSelectMenuBuilder()
-						.setCustomId('selectcustom')
-						.setPlaceholder(LanguagesController.content('messages.characters.customCharacter.description'))
-						.addOptions([
-							{
-								label: LanguagesController.content('nouns.avatar'),
-								value: 'avatar',
-								emoji: '🔵',
-								default: action.custom === 'avatar',
-							},
-							{
-								label: LanguagesController.content('nouns.equips'),
-								value: 'equips',
-								emoji: '🟢',
-								default: action.custom === 'equips',
-							},
-							{
-								label: LanguagesController.content('nouns.poses'),
-								value: 'poses',
-								emoji: '🔴',
-								default: action.custom === 'poses',
-							},
-						]),
-				]),
-			]
-
-			return { customEmbed, customComponents }
-		}
+		await action.reset()
 
 		const getCustomMenus = async () => {
 
 			const actions = [ { name: 'home', emoji: '🏠' }, { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'reset', emoji: '🔁' } ]
 
 			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'size', emoji: '📐' }, { name: 'flip', emoji: '🔴' }, { name: 'mirror', emoji: '🪞' }, { name: 'filter', emoji: '🔴' } ]
-
-			const partsbackgrounds = [ { part: 'avatar', background: 'https://i.imgur.com/UFuYQoU.png' }, { part: 'equips', background: 'https://i.imgur.com/tD3Sy5z.png' }, { part: 'poses', background: 'https://i.imgur.com/SOhtuh4.png' } ]
 
 			const parts = Object.keys(action.dataparts.all)
 
@@ -110,15 +60,8 @@ module.exports = class Command extends BaseCommand {
 				.setTitle(LanguagesController.content('messages.characters.customCharacter.title'))
 				.setDescription(LanguagesController.content('messages.characters.customCharacter.description'))
 				.setColor('#313236')
-				.setImage(skinAttachment ? 'attachment://skin.png' : partsbackgrounds.find((part) => part.part === action.custom).background)
-
-			const customColor = {
-				avatar: '#0000ff',
-				equips: '#00ff00',
-				poses: '#ff0000',
-			}
-
-			menuEmbed.setColor(customColor[action.custom])
+				.setImage(skinAttachment ? 'attachment://skin.png' : 'https://i.imgur.com/UFuYQoU.png')
+				.setColor('#0000ff')
 
 			const menuComponents = [
 				new ActionRowBuilder().addComponents([
@@ -180,11 +123,11 @@ module.exports = class Command extends BaseCommand {
 
 		}
 
-		const { customEmbed, customComponents } = await customCharacter()
+		const { menuEmbed, menuComponents } = await getCustomMenus()
 
 		let customMsg
 		try {
-			customMsg = await interaction.reply({ embeds: [customEmbed], components: customComponents, fetchReply: true })
+			customMsg = await interaction.reply({ embeds: [menuEmbed], components: menuComponents, fetchReply: true })
 		}
 		catch (error) {
 			console.log(error)
@@ -196,6 +139,7 @@ module.exports = class Command extends BaseCommand {
 		const collector = customMsg.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 })
 
 		collector.on('update_menu_message', async () => {
+			// eslint-disable-next-line no-shadow
 			const { menuEmbed, menuComponents, menuFiles } = await getCustomMenus()
 			await customMsg.edit({ attachments: [], embeds: [menuEmbed], components: menuComponents, files: menuFiles })
 		})
@@ -213,19 +157,8 @@ module.exports = class Command extends BaseCommand {
 					}
 
 				}
-
-				if (i.customId === 'selectcustom') {
-					action.custom = i.values[0]
-
-					if (!Object.keys(action.dataparts.all).includes(action.custom)) {
-						return i.followUp({ content: LanguagesController.content('messages.characters.customCharacter.noPart', { part: action.custom }), ephemeral: true })
-					}
-
-					collector.emit('update_menu_message')
-				}
 				else if (i.customId === 'selectpart') {
 					action.selectedpart = i.values[0]
-
 					collector.emit('update_menu_message')
 				}
 				else if (i.customId === 'selectcomponent') {
