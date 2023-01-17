@@ -2,23 +2,19 @@ const randomString = require('../utils/randomString')
 const Canvas = require('canvas')
 const { createCanvas, loadImage } = Canvas
 
-module.exports = class CharacterController {
-	constructor(client, user) {
+class SkinManager {
+	constructor(client, Character) {
 		this.client = client
-		this.user = user
-	}
-
-	getCharacterInfo(character_id, table) {
-		return this.client.dataManager.get(character_id, `${table}.*`)
-	}
-
-	getCacheSkins() {
-		return this.client.redisCache.get('skins')
+		this.Character = Character
 	}
 
 	async getSkin(character_id) {
 		const skin = await this.client.dataManager.get(character_id, 'characters.skin')
 		return skin
+	}
+
+	async setSkin(character_id, skinData) {
+		await this.client.dataManager.set(character_id, 'characters.skin', skinData)
 	}
 
 	async makeSkinBuffer(components) {
@@ -94,6 +90,26 @@ module.exports = class CharacterController {
 
 		const buffer = canvas.toBuffer('image/png')
 		return buffer
+	}
+
+}
+
+module.exports = class CharacterController {
+	constructor(client, user) {
+		const skinManager = new SkinManager(client, this)
+		this.client = client
+		this.user = user
+		this.getSkin = skinManager.getSkin.bind(skinManager)
+		this.setSkin = skinManager.setSkin.bind(skinManager)
+		this.makeSkinBuffer = skinManager.makeSkinBuffer.bind(skinManager)
+	}
+
+	getCharacterInfo(character_id, table) {
+		return this.client.dataManager.get(character_id, `${table}.*`)
+	}
+
+	getCacheSkins() {
+		return this.client.redisCache.get('skins')
 	}
 
 	async getCharacters() {
