@@ -204,8 +204,14 @@ module.exports = class Command extends BaseCommand {
 
 					if (templateInteraction.customId.startsWith('template_')) {
 						const templateId = templateInteraction.customId.split('_')[1]
-						await selectTemplate(templateId)
-						templateInteraction.deferUpdate()
+						try {
+							await selectTemplate(templateId)
+							templateInteraction.deferUpdate()
+						}
+						catch (error) {
+							console.log(error)
+							templateInteraction.reply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
+						}
 					}
 				})
 
@@ -228,15 +234,9 @@ module.exports = class Command extends BaseCommand {
 		}
 
 		async function selectTemplate(templateId) {
-			try {
-				const template = await Character.getTemplate(templateId)
-				await action.setTemplate(template)
-				collector.emit('update_menu_message')
-			}
-			catch (error) {
-				console.log(error)
-				return interaction.reply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
-			}
+			const template = await Character.getTemplate(templateId)
+			await action.setTemplate(template)
+			collector.emit('update_menu_message')
 		}
 
 		async function selectPart(part) {
