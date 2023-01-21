@@ -15,7 +15,9 @@ module.exports = class Command extends BaseCommand {
 	}
 	async execute(interaction) {
 
-		const ActionController = new ActionsController(this.client.redisCache)
+		const redisCache = this.client.redisCache
+
+		const ActionController = new ActionsController(redisCache)
 
 		if (await ActionController.inAction(interaction.user.id, 'customcharacter_command')) {
 			return interaction.reply({ content: this.client.languages.content('messages.actions.customcharacter_command_already'), ephemeral: true })
@@ -38,7 +40,7 @@ module.exports = class Command extends BaseCommand {
 			reset: async () => {
 				action.user_id = interaction.user.id
 				action.parts = new Map()
-				action.dataparts = JSON.parse(await this.client.redisCache.get('config:skins.json'))
+				action.dataparts = JSON.parse(await redisCache.get('config:skins.json'))
 				action.selectedpart = undefined
 				action.skinBuffer = undefined
 				action.selectedcomponent = undefined
@@ -197,45 +199,54 @@ module.exports = class Command extends BaseCommand {
 
 			async function collectTemplateSelect(templateMessage) {
 				const templateCollector = templateMessage.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 })
-
 				templateCollector.on('collect', async (templateInteraction) => {
-
-					console.log('collected templateInteraction')
-
 					if (templateInteraction.customId.startsWith('template_')) {
 						const templateId = templateInteraction.customId.split('_')[1]
 						try {
 							await selectTemplate(templateId)
-							templateInteraction.deferUpdate()
+							templateInteraction.deferUpdate().then(() => {
+								templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.templateSelected', { template: templateId }), components: [] })
+								templateCollector.stop()
+							})
 						}
 						catch (error) {
 							console.log(error)
-							templateInteraction.reply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
+							templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true, components: [] })
+							templateCollector.stop()
 						}
 					}
-				})
-
-				templateCollector.on('end', async () => {
-					await templateMessage.edit({ components: menuComponents })
 				})
 			}
 
 			const templatesComponents = await getTemplatesComponents()
-
 			const rowTemplatesComponents = []
 			for (let i = 0; i < templatesComponents.length; i += 5) {
 				rowTemplatesComponents.push(new ActionRowBuilder().addComponents(templatesComponents.slice(i, i + 5)))
 			}
-
 			const templateMessage = await templatesInteraction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.selecttemplate'), components: rowTemplatesComponents, fetchReply: true, ephemeral: true })
-
 			collectTemplateSelect(templateMessage)
-
 		}
 
 		async function selectTemplate(templateId) {
-			const template = await Character.getTemplate(templateId)
-			await action.setTemplate(template)
+			const template = action.dataparts.templates.find((t) => Object.keys(t)[0] === templateId)
+			const templateParts = template[templateId]
+			for (const part of Object.keys(templateParts)) {
+				const skindata = await redisCache.get(`skins:resources/characters/skins/${part}/${templateParts[part]}.png`)
+				action.parts.set(part, {
+					component: templateParts[part],
+					part: action.selectedpart,
+					skin: JSON.parse(skindata),
+					color: '#ffffff',
+					position: { x: 0, y: 0 },
+					rotation: 0,
+					scale: 1,
+					opacity: 1,
+					flip: false,
+					mirror: false,
+					layer: 0,
+				})
+			}
+			action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
 			collector.emit('update_menu_message')
 		}
 
@@ -258,7 +269,7 @@ module.exports = class Command extends BaseCommand {
 					action.parts.delete(action.selectedpart)
 				}
 				else {
-					const skindata = await this.client.redisCache.get(`skins:resources/characters/skins/${action.selectedpart}/${action.selectedcomponent}.png`)
+					const skindata = await redisCache.get(`skins:resources/characters/skins/${action.selectedpart}/${action.selectedcomponent}.png`)
 					action.parts.set(action.selectedpart, {
 						component: action.selectedcomponent,
 						part: action.selectedpart,
