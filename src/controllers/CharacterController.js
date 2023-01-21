@@ -65,26 +65,46 @@ class SkinManager {
 
 		for (const layer of layers) {
 
-			ctx.save()
+			const { image, component } = layer
 
-			ctx.translate(layer.component.position.x, layer.component.position.y)
-			ctx.rotate(layer.component.rotation * Math.PI / 180)
-			ctx.scale(layer.component.scale, layer.component.scale)
-			ctx.globalAlpha = layer.component.opacity
+			const { x, y } = component.position
 
-			if (layer.component.flip) {
-				ctx.scale(-1, 1)
-				ctx.translate(-layer.image.width, 0)
+			const { width, height } = image
+
+			const color = component.color
+
+			const canvasLayer = createCanvas(width, height)
+
+			const ctxLayer = canvasLayer.getContext('2d')
+
+			ctxLayer.translate(width / 2, height / 2)
+			ctxLayer.rotate(component.rotation * Math.PI / 180)
+			ctxLayer.scale(component.flip ? -1 : 1, component.mirror ? -1 : 1)
+			ctxLayer.translate(-width / 2, -height / 2)
+
+			ctxLayer.globalAlpha = component.opacity
+
+			ctxLayer.drawImage(image, 0, 0, width, height)
+
+			const layerData = ctxLayer.getImageData(0, 0, width, height)
+
+			for (let i = 0; i < layerData.data.length; i += 4) {
+
+				const r = layerData.data[i]
+				const g = layerData.data[i + 1]
+				const b = layerData.data[i + 2]
+				const a = layerData.data[i + 3]
+
+				if (r == 0 && g == 0 && b == 0 && a == 0) continue
+
+				layerData.data[i] = parseInt(color.slice(1, 3), 16)
+				layerData.data[i + 1] = parseInt(color.slice(3, 5), 16)
+				layerData.data[i + 2] = parseInt(color.slice(5, 7), 16)
+
 			}
 
-			if (layer.component.mirror) {
-				ctx.scale(1, -1)
-				ctx.translate(0, -layer.image.height)
-			}
-
-			ctx.drawImage(layer.image, 0, 0)
-
-			ctx.restore()
+			ctxLayer.putImageData(layerData, 0, 0)
+			ctx.drawImage(canvasLayer, x, y, width, height)
 
 		}
 

@@ -1,5 +1,5 @@
 const BaseCommand = require('../../utils/BaseCommand')
-const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle } = require('discord.js')
+const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, TextInputBuilder, TextInputStyle, ModalBuilder } = require('discord.js')
 const disableAllComponents = require('../../utils/disableAllComponents')
 const CharacterController = require('../../controllers/CharacterController')
 const ActionsController = require('../../controllers/ActionsController')
@@ -236,15 +236,8 @@ module.exports = class Command extends BaseCommand {
 					component: templateParts[part],
 					part: action.selectedpart,
 					skin: JSON.parse(skindata),
-					color: '#ffffff',
-					position: { x: 0, y: 0 },
-					rotation: 0,
-					scale: 1,
-					opacity: 1,
-					flip: false,
-					mirror: false,
-					layer: 0,
 				})
+				await resetPartOptions(part)
 			}
 			action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
 			collector.emit('update_menu_message')
@@ -257,8 +250,25 @@ module.exports = class Command extends BaseCommand {
 			}
 			catch (error) {
 				console.log(error)
-				return interaction.reply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
+				return interaction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
 			}
+		}
+
+		async function resetPartOptions(part) {
+			const partOptions = action.parts.get(part)
+			action.parts.set(part, {
+				component: partOptions.component,
+				part: partOptions.part,
+				skin: partOptions.skin,
+				color: '#000000',
+				position: { x: 0, y: 0 },
+				rotation: 0,
+				scale: 1,
+				opacity: 1,
+				flip: false,
+				mirror: false,
+				layer: 0,
+			})
 		}
 
 		async function selectComponent(component) {
@@ -274,15 +284,8 @@ module.exports = class Command extends BaseCommand {
 						component: action.selectedcomponent,
 						part: action.selectedpart,
 						skin: JSON.parse(skindata),
-						color: '#ffffff',
-						position: { x: 0, y: 0 },
-						rotation: 0,
-						scale: 1,
-						opacity: 1,
-						flip: false,
-						mirror: false,
-						layer: 0,
 					})
+					await resetPartOptions(action.selectedpart)
 				}
 
 				action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
@@ -291,11 +294,217 @@ module.exports = class Command extends BaseCommand {
 			}
 			catch (error) {
 				console.log(error)
-				return interaction.reply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
+				return interaction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
 			}
 		}
 
+		async function editComponentModal(type, toModalInteraction) {
+			const partOptions = action.parts.get(action.selectedpart)
+
+			const componentModal = new ModalBuilder()
+				.setTitle(LanguagesController.content('messages.characters.customCharacter.editcomponent', { part: action.selectedpart, type: `{%nouns.${type}}` }))
+				.setCustomId('edit_component_modal')
+
+			const componentModalRows = []
+
+			async function setNewComponent() {
+				action.parts.set(action.selectedpart, partOptions)
+				action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
+				console.log(action.parts.get(action.selectedpart))
+				collector.emit('update_menu_message')
+			}
+
+			async function collectModalSubmit() {
+				toModalInteraction.awaitModalSubmit({ filter, time: 30_000 })
+					.then(modalInteraction => {
+						if (type === 'color') {
+							const colorInput = modalInteraction.fields.getTextInputValue('colorInput')
+							if (colorInput) {
+								partOptions.color = colorInput
+							}
+						}
+						else if (type === 'position') {
+							const positionXInput = modalInteraction.fields.getTextInputValue('positionXInput')
+							const positionYInput = modalInteraction.fields.getTextInputValue('positionYInput')
+							if (positionXInput && positionYInput) {
+								partOptions.position = { x: Number(positionXInput), y: Number(positionYInput) }
+							}
+						}
+						else if (type === 'rotation') {
+							const rotationInput = modalInteraction.fields.getTextInputValue('rotationInput')
+							if (rotationInput) {
+								partOptions.rotation = Number(rotationInput)
+							}
+						}
+						else if (type === 'scale') {
+							const scaleInput = modalInteraction.fields.getTextInputValue('scaleInput')
+							if (scaleInput) {
+								partOptions.scale = Number(scaleInput)
+							}
+						}
+						else if (type === 'opacity') {
+							const opacityInput = modalInteraction.fields.getTextInputValue('opacityInput')
+							if (opacityInput) {
+								partOptions.opacity = Number(opacityInput)
+							}
+						}
+						else if (type === 'layer') {
+							const layerInput = modalInteraction.fields.getTextInputValue('layerInput')
+							if (layerInput) {
+								partOptions.layer = Number(layerInput)
+							}
+						}
+						setNewComponent()
+						modalInteraction.reply({ content: LanguagesController.content('messages.characters.customCharacter.editcomponent.success'), ephemeral: true })
+					})
+					.catch(console.error)
+			}
+
+			async function getEditColorBuilder() {
+				const colorInputBuilder = new TextInputBuilder()
+					.setCustomId('colorInput')
+					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.colortitle'))
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder('#ffffff')
+					.setMinLength(7)
+					.setMaxLength(7)
+					.setValue(partOptions.color)
+				return colorInputBuilder
+			}
+
+			async function getEditPositionBuilder() {
+				const positionXInputBuilder = new TextInputBuilder()
+					.setCustomId('positionXInput')
+					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.positionxtitle'))
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder('0')
+					.setMinLength(1)
+					.setMaxLength(3)
+					.setValue(partOptions.position.x.toString())
+				const positionYInputBuilder = new TextInputBuilder()
+					.setCustomId('positionYInput')
+					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.positionytitle'))
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder('0')
+					.setMinLength(1)
+					.setMaxLength(3)
+					.setValue(partOptions.position.y.toString())
+				return [positionXInputBuilder, positionYInputBuilder]
+			}
+
+			async function getEditRotationBuilder() {
+				const rotationInputBuilder = new TextInputBuilder()
+					.setCustomId('rotationInput')
+					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.rotationtitle'))
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder('0')
+					.setMinLength(1)
+					.setMaxLength(3)
+					.setValue(partOptions.rotation.toString())
+				return rotationInputBuilder
+			}
+
+			async function getEditScaleBuilder() {
+				const scaleInputBuilder = new TextInputBuilder()
+					.setCustomId('scaleInput')
+					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.scaletitle'))
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder('1')
+					.setMinLength(1)
+					.setMaxLength(3)
+					.setValue(partOptions.scale.toString())
+				return scaleInputBuilder
+			}
+
+			async function getEditOpacityBuilder() {
+
+				const opacityInputBuilder = new TextInputBuilder()
+					.setCustomId('opacityInput')
+					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.opacitytitle'))
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder('1')
+					.setMinLength(1)
+					.setMaxLength(3)
+					.setValue(partOptions.opacity.toString())
+				return opacityInputBuilder
+			}
+
+			async function getEditLayerBuilder() {
+
+				const layerInputBuilder = new TextInputBuilder()
+					.setCustomId('layerInput')
+					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.layertitle'))
+					.setStyle(TextInputStyle.Short)
+					.setPlaceholder('0')
+					.setMinLength(1)
+					.setMaxLength(3)
+					.setValue(partOptions.layer.toString())
+				return layerInputBuilder
+			}
+
+			switch (type) {
+			case 'reset': {
+				await resetPartOptions(action.selectedpart)
+				setNewComponent()
+				return interaction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.editcomponent.success'), ephemeral: true })
+			}
+			case 'color': {
+				const colorRow = new ActionRowBuilder().addComponents(await getEditColorBuilder())
+				componentModalRows.push(colorRow)
+				break
+			}
+			case 'position': {
+				const positionRow = new ActionRowBuilder().addComponents(await getEditPositionBuilder())
+				componentModalRows.push(positionRow)
+				break
+			}
+			case 'rotation': {
+				const rotationRow = new ActionRowBuilder().addComponents(await getEditRotationBuilder())
+				componentModalRows.push(rotationRow)
+				break
+			}
+			case 'scale': {
+				const scaleRow = new ActionRowBuilder().addComponents(await getEditScaleBuilder())
+				componentModalRows.push(scaleRow)
+				break
+			}
+			case 'opacity': {
+				const opacityRow = new ActionRowBuilder().addComponents(await getEditOpacityBuilder())
+				componentModalRows.push(opacityRow)
+				break
+			}
+			case 'flip': {
+				partOptions.flip = !partOptions.flip
+				break
+			}
+			case 'mirror': {
+				partOptions.mirror = !partOptions.mirror
+				break
+			}
+			case 'layer': {
+				const layerRow = new ActionRowBuilder().addComponents(await getEditLayerBuilder())
+				componentModalRows.push(layerRow)
+				break
+			}
+			}
+
+			if (['flip', 'mirror'].includes(type)) {
+				return toModalInteraction.deferUpdate().then(async () => {
+					await setNewComponent()
+				})
+			}
+
+			componentModal.addComponents(...componentModalRows)
+
+			await toModalInteraction.showModal(componentModal)
+
+			collectModalSubmit()
+		}
+
 		collector.on('collect', async (i) => {
+			if (i.customId === 'editcomponent') {
+				return editComponentModal(i.values[0], i)
+			}
 			i.deferUpdate().then(async () => {
 				if (i.customId === 'makeaction') {
 					action.action = i.values[0]

@@ -1,5 +1,5 @@
 const { GatewayIntentBits, Client } = require('discord.js')
-
+process.removeAllListeners('warning')
 const eventsHandler = require('./handlers/eventsHandler')
 const DbManager = require('./managers/DbManager')
 const RedisManager = require('./managers/RedisManager')
