@@ -205,7 +205,7 @@ module.exports = class Command extends BaseCommand {
 						try {
 							await selectTemplate(templateId)
 							templateInteraction.deferUpdate().then(() => {
-								templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.templateSelected', { template: templateId }), components: [] })
+								templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.templateselected', { template: templateId }), components: [] })
 								templateCollector.stop()
 							})
 						}
