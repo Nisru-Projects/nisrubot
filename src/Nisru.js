@@ -24,6 +24,7 @@ module.exports = class NisruClient extends Client {
 
 		this.dataManager.createBackup()
 		this.dataManager.deleteOldBackups()
+		this.dataManager.clientId = options[options.mode].BOT_ID
 
 		this.verification(options)
 

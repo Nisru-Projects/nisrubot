@@ -60,9 +60,14 @@ module.exports = async (client) => {
 		})
 	}
 
+	async function loadGlobalData() {
+		client.dataManager.GlobalData.setClientIfNotExists()
+	}
+
 	await loadConfigs()
 	await loadLanguages()
 	await loadSkins()
+	await loadGlobalData()
 
 	return true
 

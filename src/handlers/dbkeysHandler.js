@@ -17,7 +17,8 @@ module.exports = (client) => {
 			if (a.key > b.key) return 1
 			return 0
 		})
-		console.log(`[DATABASE] Loaded with ${client.knexDatabase.keys.length} keys`.green)
+
+		return console.log(`[DATABASE] Loaded with ${client.knexDatabase.keys.length} keys`.green)
 	})
 
 }

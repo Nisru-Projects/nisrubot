@@ -30,7 +30,9 @@ module.exports = {
 				if (!character.selected_character) return interaction.reply({ content: messages.noSelectedCharacter, ephemeral: true })
 			}
 
-			cmd.execute(interaction, character).catch((err) => {
+			cmd.execute(interaction, character).then(() => {
+				client.dataManager.GlobalData.increment('totalcommands', 1)
+			}).catch((err) => {
 				console.log(err)
 				interaction.reply({ content: messages.errorCommand, ephemeral: true })
 			})

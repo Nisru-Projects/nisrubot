@@ -1,9 +1,54 @@
 const fs = require('fs')
 const path = require('path')
+
+class GlobalData {
+	constructor(DataManager) {
+		this.DataManager = DataManager
+	}
+
+	async setClientIfNotExists() {
+		const exists = await this.exists('client_id')
+		if (!exists) {
+			await this.DataManager.insert('global_data.client_id', this.DataManager.clientId)
+		}
+	}
+
+	async get(key) {
+		const data = await this.DataManager.get(this.DataManager.clientId, `global_data.${key}`)
+		return data || null
+	}
+
+	async set(key, value) {
+		console.log(key, value)
+		await this.DataManager.set({ 'global_data': this.DataManager.clientId }, { [`global_data.${key}`]: value })
+	}
+
+	async delete(key) {
+		await this.DataManager.delete(this.DataManager.clientId, `global_data.${key}`)
+	}
+
+	async exists(key) {
+		const data = await this.get(key)
+		return data[`global_data.${key}`] != null
+	}
+
+	async increment(key, value) {
+		const data = await this.get(key)
+		if (data[`global_data.${key}`] == null) {
+			await this.set(key, value)
+		}
+		else {
+			await this.set(key, data[`global_data.${key}`] + value)
+		}
+	}
+
+}
+
 module.exports = class DataManager {
 	constructor(knexDatabase, redisCache) {
 		this.knexDatabase = knexDatabase
 		this.redisCache = redisCache
+		this.GlobalData = new GlobalData(this)
 	}
 
 	async createBackup() {
@@ -153,7 +198,7 @@ module.exports = class DataManager {
 
 			for (const key of keys) {
 				if (!key.endsWith('.*')) {
-					result[key] = result[key][key.split('.')[1]]
+					if (result[key] != null) result[key] = result[key][key.split('.')[1]]
 				}
 			}
 
@@ -163,9 +208,10 @@ module.exports = class DataManager {
 
 	insert(key, value) {
 		return new Promise(async (resolve) => {
-			const query = `INSERT INTO ${key.split('.')[0]} (${key.split('.')[1]}) VALUES (?)`
+			const primaryKey = this.getPrimaryKey(key)
+			const query = `INSERT INTO ${key.split('.')[0]} (${key.split('.')[1]}) VALUES (?) RETURNING ${primaryKey}`
 			const result = await this.query(query, [value])
-			resolve(result)
+			resolve(result.rows[0][primaryKey])
 		})
 	}
 

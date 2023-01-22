@@ -308,15 +308,15 @@ module.exports = class Command extends BaseCommand {
 				fields: [],
 			}
 
-			creationEmbed.fields.push({ name: `${LanguagesController.content('nouns.name')}: ${action.character.name || LanguagesController.content('messages.utils.undefined')}`,
+			creationEmbed.fields.push({ name: `${LanguagesController.content('nouns.name')}: ${action.character.name || LanguagesController.content('nouns.undefined')}`,
 				value: `
-${LanguagesController.content('nouns.gender')}: ${LanguagesController.content(`genders.${action.character.gender}`, { undefined: 'messages.utils.undefined' })}
-${LanguagesController.content('nouns.race')}: ${LanguagesController.content(`races.${action.character.race}`, { undefined: 'messages.utils.undefined' })}
+${LanguagesController.content('nouns.gender')}: ${LanguagesController.content(`genders.${action.character.gender}`, { undefined: 'nouns.undefined' })}
+${LanguagesController.content('nouns.race')}: ${LanguagesController.content(`races.${action.character.race}`, { undefined: 'nouns.undefined' })}
 ${LanguagesController.content('nouns.element')}: ${action.character.element}
 ${LanguagesController.content('nouns.constellation')}: ${action.character.constellation}` })
 			if (action.character.baseAttributes) creationEmbed.fields.push({ name: LanguagesController.content('nouns.attributes'), value: Object.entries(action.character.baseAttributes).map((attribute) => `${attribute[0]}: ${attribute[1]}`).join('\n') })
 
-			if (action.character.gamemode) creationEmbed.fields.push({ name: `${LanguagesController.content('nouns.gamemode')}: ${LanguagesController.content(`nouns.${action.character.gamemode}`, { undefined: 'messages.utils.undefined' })}`, value: LanguagesController.content(`messages.characters.creationCharacterDefaults.gamemode.${action.character.gamemode}`) })
+			if (action.character.gamemode) creationEmbed.fields.push({ name: `${LanguagesController.content('nouns.gamemode')}: ${LanguagesController.content(`nouns.${action.character.gamemode}`, { undefined: 'nouns.undefined' })}`, value: LanguagesController.content(`messages.characters.creationCharacterDefaults.gamemode.${action.character.gamemode}`) })
 
 			const creationComponents = () => {
 				const components = [

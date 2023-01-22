@@ -2,6 +2,7 @@
     "mode": "development",
     "emeraldtoken": "",
     "development": {
+        "BOT_ID": "",
         "BOT_TOKEN": "",
         "DB_HOST": "",
         "DB_PORT": 5432,
@@ -11,6 +12,7 @@
         "OPENAI_API_KEY": ""
     },
     "production": {
+        "BOT_ID": "",
         "BOT_TOKEN": "",
         "DB_HOST": "",
         "DB_PORT": 5432,
