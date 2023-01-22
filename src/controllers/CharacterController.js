@@ -77,10 +77,18 @@ class SkinManager {
 
 			const ctxLayer = canvasLayer.getContext('2d')
 
+			if (component.scale > 1.5) component.scale = 1.5
+
 			ctxLayer.translate(width / 2, height / 2)
 			ctxLayer.rotate(component.rotation * Math.PI / 180)
-			ctxLayer.scale(component.flip ? -1 : 1, component.mirror ? -1 : 1)
+			ctxLayer.scale(component.scale, component.scale)
 			ctxLayer.translate(-width / 2, -height / 2)
+
+			if (component.flip) ctxLayer.scale(-1, 1)
+
+			if (component.mirror) ctxLayer.scale(1, -1)
+
+			ctxLayer.translate(component.flip ? -width : 0, component.mirror ? -height : 0)
 
 			ctxLayer.globalAlpha = component.opacity
 

@@ -53,7 +53,18 @@ module.exports = class Command extends BaseCommand {
 
 			const parts = Object.keys(action.dataparts.all)
 			const actions = [ { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'templates', emoji: '📋' }, { name: 'reset', emoji: '🔁' } ]
-			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'size', emoji: '📐' }, { name: 'flip', emoji: '🔴' }, { name: 'mirror', emoji: '🪞' }, { name: 'filter', emoji: '🔴' } ]
+			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'scale', emoji: '📐' }, { name: 'flip', emoji: '🔴' }, { name: 'mirror', emoji: '🪞' } ]
+
+			for (let i = 0; i < editcomponents.length; i++) {
+				const component = action.parts.get(action.selectedpart)?.[editcomponents[i].name]
+				if (component === false || component === true) {
+					editcomponents[i].value = LanguagesController.content(`nouns.${component}`)
+				}
+				else if (component) {
+					editcomponents[i].value = typeof component === 'object' ? Object.entries(component).map((entry) => `${entry[0]}: ${entry[1]}`).join(', ') : component
+				}
+			}
+
 			const skincomponents = action.dataparts.all[action.selectedpart] || ['default']
 			const skinAttachment = action.skinBuffer ? new AttachmentBuilder(action.skinBuffer, { name: 'skin.png' }) : null
 
@@ -90,7 +101,7 @@ module.exports = class Command extends BaseCommand {
 				}),
 				'editcomponents': editcomponents.map((editcomponent) => {
 					return {
-						label: LanguagesController.content(`nouns.${editcomponent.name}`),
+						label: `${LanguagesController.content(`nouns.${editcomponent.name}`)} ${editcomponent.value ? `(${editcomponent.value})` : ''}`,
 						value: editcomponent.name,
 						emoji: editcomponent.emoji,
 					}
@@ -302,7 +313,7 @@ module.exports = class Command extends BaseCommand {
 			const partOptions = action.parts.get(action.selectedpart)
 
 			const componentModal = new ModalBuilder()
-				.setTitle(LanguagesController.content('messages.characters.customCharacter.editcomponent', { part: action.selectedpart, type: `{%nouns.${type}}` }))
+				.setTitle(LanguagesController.content('messages.characters.customCharacter.editcomponent.title', { part: action.selectedpart, type: `{%nouns.${type}}` }))
 				.setCustomId('edit_component_modal')
 
 			const componentModalRows = []
@@ -310,7 +321,6 @@ module.exports = class Command extends BaseCommand {
 			async function setNewComponent() {
 				action.parts.set(action.selectedpart, partOptions)
 				action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
-				console.log(action.parts.get(action.selectedpart))
 				collector.emit('update_menu_message')
 			}
 
@@ -407,12 +417,13 @@ module.exports = class Command extends BaseCommand {
 			async function getEditScaleBuilder() {
 				const scaleInputBuilder = new TextInputBuilder()
 					.setCustomId('scaleInput')
-					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.scaletitle'))
+					.setLabel(LanguagesController.content('messages.characters.customCharacter.editcomponent.scaletitle') + ' (Max: 1.25)')
 					.setStyle(TextInputStyle.Short)
 					.setPlaceholder('1')
 					.setMinLength(1)
-					.setMaxLength(3)
+					.setMaxLength(4)
 					.setValue(partOptions.scale.toString())
+					.setPlaceholder('1.25')
 				return scaleInputBuilder
 			}
 
@@ -454,8 +465,10 @@ module.exports = class Command extends BaseCommand {
 				break
 			}
 			case 'position': {
-				const positionRow = new ActionRowBuilder().addComponents(await getEditPositionBuilder())
-				componentModalRows.push(positionRow)
+				const [positionXInputBuilder, positionYInputBuilder] = await getEditPositionBuilder()
+				const positionXRow = new ActionRowBuilder().addComponents(positionXInputBuilder)
+				const positionYRow = new ActionRowBuilder().addComponents(positionYInputBuilder)
+				componentModalRows.push(positionXRow, positionYRow)
 				break
 			}
 			case 'rotation': {
