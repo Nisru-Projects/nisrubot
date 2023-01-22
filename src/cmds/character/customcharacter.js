@@ -53,14 +53,14 @@ module.exports = class Command extends BaseCommand {
 
 			const parts = Object.keys(action.dataparts.all)
 			const actions = [ { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'templates', emoji: '📋' }, { name: 'reset', emoji: '🔁' } ]
-			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'scale', emoji: '📐' }, { name: 'flip', emoji: '🔴' }, { name: 'mirror', emoji: '🪞' } ]
+			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'scale', emoji: '📐' }, { name: 'flip', emoji: '🔃' }, { name: 'mirror', emoji: '🪞' } ]
 
 			for (let i = 0; i < editcomponents.length; i++) {
 				const component = action.parts.get(action.selectedpart)?.[editcomponents[i].name]
 				if (component === false || component === true) {
 					editcomponents[i].value = LanguagesController.content(`nouns.${component}`)
 				}
-				else if (component) {
+				else if (component !== undefined) {
 					editcomponents[i].value = typeof component === 'object' ? Object.entries(component).map((entry) => `${entry[0]}: ${entry[1]}`).join(', ') : component
 				}
 			}
@@ -238,6 +238,30 @@ module.exports = class Command extends BaseCommand {
 			collectTemplateSelect(templateMessage)
 		}
 
+		async function resetPartOptions(part) {
+			const partOptions = action.parts.get(part)
+			action.parts.set(part, {
+				component: partOptions.component,
+				part: partOptions.part,
+				skin: partOptions.skin,
+				color: '#000000',
+				position: { x: 0, y: 0 },
+				rotation: 0,
+				scale: 1,
+				opacity: 1,
+				flip: false,
+				mirror: false,
+				layer: 0,
+			})
+		}
+
+		async function setNewComponent() {
+			const partOptions = action.parts.get(action.selectedpart)
+			action.parts.set(action.selectedpart, partOptions)
+			action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
+			collector.emit('update_menu_message')
+		}
+
 		async function selectTemplate(templateId) {
 			const template = action.dataparts.templates.find((t) => Object.keys(t)[0] === templateId)
 			const templateParts = template[templateId]
@@ -263,23 +287,6 @@ module.exports = class Command extends BaseCommand {
 				console.log(error)
 				return interaction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
 			}
-		}
-
-		async function resetPartOptions(part) {
-			const partOptions = action.parts.get(part)
-			action.parts.set(part, {
-				component: partOptions.component,
-				part: partOptions.part,
-				skin: partOptions.skin,
-				color: '#000000',
-				position: { x: 0, y: 0 },
-				rotation: 0,
-				scale: 1,
-				opacity: 1,
-				flip: false,
-				mirror: false,
-				layer: 0,
-			})
 		}
 
 		async function selectComponent(component) {
@@ -317,12 +324,6 @@ module.exports = class Command extends BaseCommand {
 				.setCustomId('edit_component_modal')
 
 			const componentModalRows = []
-
-			async function setNewComponent() {
-				action.parts.set(action.selectedpart, partOptions)
-				action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
-				collector.emit('update_menu_message')
-			}
 
 			async function collectModalSubmit() {
 				toModalInteraction.awaitModalSubmit({ filter, time: 30_000 })
@@ -365,9 +366,10 @@ module.exports = class Command extends BaseCommand {
 							}
 						}
 						setNewComponent()
-						modalInteraction.reply({ content: LanguagesController.content('messages.characters.customCharacter.editcomponent.success'), ephemeral: true })
+						modalInteraction.deferUpdate()
+					}).catch(() => {
+						toModalInteraction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.editcomponent.error'), ephemeral: true })
 					})
-					.catch(console.error)
 			}
 
 			async function getEditColorBuilder() {
@@ -457,7 +459,7 @@ module.exports = class Command extends BaseCommand {
 			case 'reset': {
 				await resetPartOptions(action.selectedpart)
 				setNewComponent()
-				return interaction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.editcomponent.success'), ephemeral: true })
+				return toModalInteraction.deferUpdate()
 			}
 			case 'color': {
 				const colorRow = new ActionRowBuilder().addComponents(await getEditColorBuilder())
