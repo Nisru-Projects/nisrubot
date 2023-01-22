@@ -75,6 +75,18 @@ module.exports = class Command extends BaseCommand {
 				.setImage(skinAttachment ? 'attachment://skin.png' : 'https://i.imgur.com/UFuYQoU.png')
 				.setColor('#0000ff')
 
+			const isRequired = (a, b) => {
+				if (action.dataparts.required.includes(a) && !action.dataparts.required.includes(b)) {
+					return -1
+				}
+				else if (!action.dataparts.required.includes(a) && action.dataparts.required.includes(b)) {
+					return 1
+				}
+				else {
+					return 0
+				}
+			}
+
 			const menuOptions = {
 				'actions': actions.map((clickaction) => {
 					return {
@@ -83,7 +95,7 @@ module.exports = class Command extends BaseCommand {
 						emoji: clickaction.emoji,
 					}
 				}),
-				'parts': parts.map((part) => {
+				'parts': parts.sort(isRequired).map((part) => {
 					return {
 						label: `${LanguagesController.content(`nouns.${part}`)} ${action.dataparts.required.includes(part) ? `${action.parts.get(part) ? '✅' : '❌'}` : ''}`,
 						value: part,
