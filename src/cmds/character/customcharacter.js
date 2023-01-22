@@ -85,7 +85,7 @@ module.exports = class Command extends BaseCommand {
 				}),
 				'parts': parts.map((part) => {
 					return {
-						label: LanguagesController.content(`nouns.${part}`),
+						label: `${LanguagesController.content(`nouns.${part}`)} ${action.dataparts.required.includes(part) ? `(${LanguagesController.content('nouns.required')} *)` : ''}`,
 						value: part,
 						emoji: '👋',
 						default: action.selectedpart === part,
@@ -169,75 +169,6 @@ module.exports = class Command extends BaseCommand {
 			await customMsg.edit({ attachments: [], embeds: [menuEmbed], components: menuComponents, files: menuFiles })
 		})
 
-		async function reset() {
-			await action.reset()
-			collector.emit('update_menu_message')
-		}
-
-		async function cancel() {
-			collector.stop()
-		}
-
-		async function save() {
-			try {
-				const skinData = {
-					buffer: action.buffer,
-					parts: action.parts,
-				}
-				await Character.setSkin(action.character, skinData)
-				action.concluded = true
-				return collector.stop()
-			}
-			catch (error) {
-				console.log(error)
-				return interaction.reply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
-			}
-		}
-
-		async function showTemplates(templatesInteraction) {
-
-			async function getTemplatesComponents() {
-				const templates = action.dataparts.templates
-				const templatesComponents = templates.map((template) => {
-					const templateName = Object.keys(template)[0]
-					return new ButtonBuilder()
-						.setCustomId(`template_${templateName}`)
-						.setLabel(templateName)
-						.setStyle(ButtonStyle.Primary)
-				})
-				return templatesComponents
-			}
-
-			async function collectTemplateSelect(templateMessage) {
-				const templateCollector = templateMessage.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 })
-				templateCollector.on('collect', async (templateInteraction) => {
-					if (templateInteraction.customId.startsWith('template_')) {
-						const templateId = templateInteraction.customId.split('_')[1]
-						try {
-							await selectTemplate(templateId)
-							templateInteraction.deferUpdate().then(() => {
-								templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.templateselected', { template: templateId }), components: [] })
-								templateCollector.stop()
-							})
-						}
-						catch (error) {
-							console.log(error)
-							templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true, components: [] })
-							templateCollector.stop()
-						}
-					}
-				})
-			}
-
-			const templatesComponents = await getTemplatesComponents()
-			const rowTemplatesComponents = []
-			for (let i = 0; i < templatesComponents.length; i += 5) {
-				rowTemplatesComponents.push(new ActionRowBuilder().addComponents(templatesComponents.slice(i, i + 5)))
-			}
-			const templateMessage = await templatesInteraction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.selecttemplate'), components: rowTemplatesComponents, fetchReply: true, ephemeral: true })
-			collectTemplateSelect(templateMessage)
-		}
-
 		async function resetPartOptions(part) {
 			const partOptions = action.parts.get(part)
 			action.parts.set(part, {
@@ -258,22 +189,6 @@ module.exports = class Command extends BaseCommand {
 		async function setNewComponent() {
 			const partOptions = action.parts.get(action.selectedpart)
 			action.parts.set(action.selectedpart, partOptions)
-			action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
-			collector.emit('update_menu_message')
-		}
-
-		async function selectTemplate(templateId) {
-			const template = action.dataparts.templates.find((t) => Object.keys(t)[0] === templateId)
-			const templateParts = template[templateId]
-			for (const part of Object.keys(templateParts)) {
-				const skindata = await redisCache.get(`skins:resources/characters/skins/${part}/${templateParts[part]}.png`)
-				action.parts.set(part, {
-					component: templateParts[part],
-					part: action.selectedpart,
-					skin: JSON.parse(skindata),
-				})
-				await resetPartOptions(part)
-			}
 			action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
 			collector.emit('update_menu_message')
 		}
@@ -514,6 +429,100 @@ module.exports = class Command extends BaseCommand {
 			await toModalInteraction.showModal(componentModal)
 
 			collectModalSubmit()
+		}
+
+		async function reset() {
+			await action.reset()
+			collector.emit('update_menu_message')
+		}
+
+		async function cancel() {
+			collector.stop()
+		}
+
+		async function save() {
+			try {
+
+				const requiredParts = action.dataparts.required
+
+				const missingParts = requiredParts.filter((part) => !action.parts[part])
+
+				if (missingParts.length > 0) {
+					return interaction.reply({ content: LanguagesController.content('messages.characters.customCharacter.missingParts', { parts: missingParts.join(', ') }), ephemeral: true })
+				}
+
+				const skinData = {
+					buffer: action.buffer,
+					parts: action.parts,
+				}
+				await Character.setSkin(action.character, skinData)
+				action.concluded = true
+				return collector.stop()
+			}
+			catch (error) {
+				console.log(error)
+				return interaction.reply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
+			}
+		}
+
+		async function showTemplates(templatesInteraction) {
+
+			async function getTemplatesComponents() {
+				const templates = action.dataparts.templates
+				const templatesComponents = templates.map((template) => {
+					const templateName = Object.keys(template)[0]
+					return new ButtonBuilder()
+						.setCustomId(`template_${templateName}`)
+						.setLabel(templateName)
+						.setStyle(ButtonStyle.Primary)
+				})
+				return templatesComponents
+			}
+
+			async function collectTemplateSelect(templateMessage) {
+				const templateCollector = templateMessage.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 })
+				templateCollector.on('collect', async (templateInteraction) => {
+					if (templateInteraction.customId.startsWith('template_')) {
+						const templateId = templateInteraction.customId.split('_')[1]
+						try {
+							await selectTemplate(templateId)
+							templateInteraction.deferUpdate().then(() => {
+								templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.templateselected', { template: templateId }), components: [] })
+								templateCollector.stop()
+							})
+						}
+						catch (error) {
+							console.log(error)
+							templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true, components: [] })
+							templateCollector.stop()
+						}
+					}
+				})
+			}
+
+			const templatesComponents = await getTemplatesComponents()
+			const rowTemplatesComponents = []
+			for (let i = 0; i < templatesComponents.length; i += 5) {
+				rowTemplatesComponents.push(new ActionRowBuilder().addComponents(templatesComponents.slice(i, i + 5)))
+			}
+			const templateMessage = await templatesInteraction.followUp({ content: LanguagesController.content('messages.characters.customCharacter.selecttemplate'), components: rowTemplatesComponents, fetchReply: true, ephemeral: true })
+			collectTemplateSelect(templateMessage)
+		}
+
+		async function selectTemplate(templateId) {
+			const template = action.dataparts.templates.find((t) => Object.keys(t)[0] === templateId)
+			const templateParts = template[templateId]
+			for (const part of Object.keys(templateParts)) {
+				const skindata = await redisCache.get(`skins:resources/characters/skins/${part}/${templateParts[part]}.png`)
+				action.parts.set(part, {
+					component: templateParts[part],
+					part: action.selectedpart,
+					skin: JSON.parse(skindata),
+				})
+				await resetPartOptions(part)
+			}
+			action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
+			collector.emit('update_menu_message')
 		}
 
 		collector.on('collect', async (i) => {
