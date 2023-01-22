@@ -74,14 +74,15 @@ module.exports = class DataManager {
 	getPrimaryKey(key) {
 		if (!key.includes('.')) key = `${key}.*`
 		const primaryKey = this.knexDatabase.keys.find(keyobj => keyobj.key === key)?.primaryKey
-		if (!primaryKey) return console.log(`[DATABASE] Invalid key: ${key}`.red)
+		const receivedFrom = new Error().stack.split('\n')[2].trim()
+		if (!primaryKey) return console.log(`[DATABASE] Invalid key: ${key}\n${receivedFrom}`.red)
 		return primaryKey
 	}
 
 	updateCache(primaryValue, key, value) {
 
 		if (value) {
-			return this.redisCache.set(`${key}:${primaryValue}`, JSON.stringify(value), 60 * 60 * 5)
+			return this.redisCache.set(`${key}:${primaryValue}`, JSON.stringify(value), 60 * 60 * 2)
 		}
 
 		return new Promise(async (resolve) => {
@@ -89,7 +90,7 @@ module.exports = class DataManager {
 			const query = `SELECT ${key.split('.')[1]} FROM ${key.split('.')[0]} WHERE ${primaryKey} = ?`
 			const result = await this.query(query, [primaryValue])
 			if (result.rows.length > 0) {
-				this.redisCache.set(`${key}:${primaryValue}`, JSON.stringify(result.rows[0]), 60 * 60 * 5)
+				this.redisCache.set(`${key}:${primaryValue}`, JSON.stringify(result.rows[0]), 60 * 60 * 2)
 				resolve(result.rows[0])
 			}
 			else {
@@ -134,7 +135,8 @@ module.exports = class DataManager {
 		})
 
 		for (const key of keys) {
-			if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key: ${key}`.red)
+			const receivedFrom = new Error().stack.split('\n')[2].trim()
+			if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key: ${key}\n${receivedFrom}`.red)
 		}
 
 		return new Promise(async (resolve) => {
@@ -169,7 +171,10 @@ module.exports = class DataManager {
 
 	set(primaryValues, values) {
 
-		if (typeof values === 'string') values = [values]
+		const receivedFrom = new Error().stack.split('\n')[2].trim()
+
+		if (typeof values !== 'object') return console.log(`[DATABASE] Invalid values type: ${typeof values}, expected object. Values: ${values}, primaryValues: ${primaryValues}\n${receivedFrom}`.red)
+		if (typeof primaryValues !== 'object') return console.log(`[DATABASE] Invalid primaryValues type: ${typeof primaryValues}, expected object. Values: ${primaryValues}\n${receivedFrom}`.red)
 
 		const keys = Object.keys(values).map(key => {
 			if (!key.includes('.')) return `${key}.*`
@@ -177,7 +182,8 @@ module.exports = class DataManager {
 		})
 
 		for (const key of keys) {
-			if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key: ${key}`.red)
+			const threeSimilarKeys = this.knexDatabase.keys.filter(keyobj => keyobj.key.includes(key.split('.')[0])).map(keyobj => keyobj.key).slice(0, 3)
+			if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key: ${key.toUpperCase()} in values: ${values}, expected object. Values: ${values} and primaryValues: ${primaryValues}\n${receivedFrom}\nSimilar keys: ${threeSimilarKeys}`.red)
 		}
 
 		const tables = keys.map(key => key.split('.')[0])
@@ -190,7 +196,11 @@ module.exports = class DataManager {
 				const params = keys.filter(key => key.split('.')[0] === table).map(key => values[key])
 				params.push(primaryValues[table])
 				await this.query(query, params)
-				await this.redisCache.delete(`${table}:${primaryValues[table]}`)
+				await this.redisCache.delete(`${table}.*:${primaryValues[table]}`)
+				// eslint-disable-next-line no-shadow
+				for (const key of keys.filter(key => key.split('.')[0] === table)) {
+					await this.redisCache.delete(`${key}:${primaryValues[table]}`)
+				}
 			}
 			resolve()
 		})

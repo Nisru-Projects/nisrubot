@@ -26,7 +26,6 @@ module.exports = {
 				await guild.commands.set(commands)
 			}
 			catch (error) {
-				/* empty */
 				console.log(`[ERROR] ${error.message}`.red)
 			}
 		})
@@ -34,17 +33,21 @@ module.exports = {
 		const time = Math.round(process.uptime())
 		console.log(`\n     Bot started in ${time}s\n`.green)
 
-		/*process.on('unhandledRejection', (reason, promise) => {
-			console.log(`[ERROR] Unhandled Rejection at: ${promise}, reason: ${reason}`.red)
+		/* process.on('unhandledRejection', (reason) => {
+			const timeError = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+			const receivedFrom = new Error().stack.split('\n')[2].trim()
+			console.log(`[ERROR] Unhandled Rejection at: ${timeError}, reason: ${reason}\n${receivedFrom}`.red)
 		})
 
-		process.on('uncaughtException', (err, origin) => {
-			console.log(`[ERROR] Uncaught Exception at: ${origin}, reason: ${err}`.red)
+		process.on('uncaughtException', (err) => {
+			const timeError = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+			const receivedFrom = new Error()
+			console.log(`[ERROR] Uncaught Exception at: ${timeError}, reason: ${err}\n${receivedFrom}`.red)
 		})
 
 		process.on('exit', (code) => {
 			console.log(`[INFO] Process exited with code: ${code}`.yellow)
-		})*/
+		}) */
 
 	},
 

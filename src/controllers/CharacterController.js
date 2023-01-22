@@ -9,12 +9,12 @@ class SkinManager {
 	}
 
 	async getSkin(character_id) {
-		const skin = await this.client.dataManager.get(character_id, 'characters.skin')
-		return skin
+		const skin = await this.client.dataManager.get(character_id, 'characters_geral.skin')
+		return skin['characters_geral.skin']
 	}
 
 	async setSkin(character_id, skinData) {
-		await this.client.dataManager.set(character_id, 'characters.skin', skinData)
+		await this.client.dataManager.set({ 'characters_geral': character_id }, { 'characters_geral.skin': skinData })
 	}
 
 	async makeSkinBuffer(components) {
@@ -48,7 +48,8 @@ class SkinManager {
 
 		for (const component of components) {
 
-			if (component.skin == null) return console.log(`[SKIN] Component ${component.part} is null`, component)
+			const receivedFrom = new Error().stack.split('\n')[2].trim()
+			if (component.skin == null) return console.log(`[SKIN] Component ${component.part} is null\n${receivedFrom}`.red, component)
 
 			const buffer = Buffer.from(component.skin.data, 'base64')
 
@@ -140,13 +141,18 @@ module.exports = class CharacterController {
 		return this.client.redisCache.get('skins')
 	}
 
+	async getSelectedCharacterId() {
+		const user_data = await this.client.dataManager.get(this.user.id, ['users.selected_character'])
+		return user_data['users.selected_character']
+	}
+
 	async getCharacters() {
 
 		const user_data = await this.client.dataManager.get(this.user.id, ['users.selected_character', 'users.characters'])
 
 		this.characters = {
-			selected_character: user_data.characters == null ? undefined : user_data.selected_character,
-			characters: user_data.characters == null ? [] : user_data.characters,
+			selected_character: user_data['users.selected_character'] == null ? undefined : user_data['users.selected_character'],
+			characters: user_data['users.characters'] == null ? [] : user_data['users.characters'],
 		}
 
 		return this.characters

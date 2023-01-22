@@ -39,6 +39,7 @@ module.exports = class Command extends BaseCommand {
 		const action = {
 			reset: async () => {
 				action.user_id = interaction.user.id
+				action.character = await Character.getSelectedCharacterId()
 				action.parts = new Map()
 				action.dataparts = JSON.parse(await redisCache.get('config:skins.json'))
 				action.selectedpart = undefined
@@ -49,11 +50,18 @@ module.exports = class Command extends BaseCommand {
 
 		await action.reset()
 
+		const currentSkin = await Character.getSkin(action.character)
+
+		if (currentSkin !== null) {
+			currentSkin.parts.map((part) => action.parts.set(part.part, part))
+			action.skinBuffer = Buffer.from(currentSkin.buffer.data)
+		}
+
 		const getCustomMenus = async () => {
 
 			const parts = Object.keys(action.dataparts.all)
 			const actions = [ { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'templates', emoji: '📋' }, { name: 'reset', emoji: '🔁' } ]
-			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'scale', emoji: '📐' }, { name: 'flip', emoji: '🔃' }, { name: 'mirror', emoji: '🪞' } ]
+			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'rotation', emoji: '🔃' }, { name: 'scale', emoji: '📐' }, { name: 'flip', emoji: '⬅️' }, { name: 'mirror', emoji: '🪞' } ]
 
 			for (let i = 0; i < editcomponents.length; i++) {
 				const component = action.parts.get(action.selectedpart)?.[editcomponents[i].name]
@@ -121,10 +129,10 @@ module.exports = class Command extends BaseCommand {
 			}
 
 			menuOptions.skincomponents.unshift({
-				label: LanguagesController.content('nouns.none'),
-				value: 'none',
-				emoji: '🥪',
-				default: action.parts.get(action.selectedpart)?.component === 'none' || !action.parts.get(action.selectedpart)?.component,
+				label: 		LanguagesController.content('nouns.none'),
+				value: 		'none',
+				emoji: 		'🥪',
+				default: 	action.parts.get(action.selectedpart)?.component === 'none' || !action.parts.get(action.selectedpart)?.component,
 			})
 
 			const menuComponents = [
@@ -160,11 +168,11 @@ module.exports = class Command extends BaseCommand {
 
 		}
 
-		const { menuEmbed, menuComponents } = await getCustomMenus()
+		const { menuEmbed, menuComponents, menuFiles } = await getCustomMenus()
 
 		let customMsg
 		try {
-			customMsg = await interaction.reply({ embeds: [menuEmbed], components: menuComponents, fetchReply: true })
+			customMsg = await interaction.reply({ embeds: [menuEmbed], components: menuComponents, fetchReply: true, files: menuFiles })
 		}
 		catch (error) {
 			console.log(error)
@@ -185,16 +193,16 @@ module.exports = class Command extends BaseCommand {
 			const partOptions = action.parts.get(part)
 			action.parts.set(part, {
 				component: partOptions.component,
-				part: partOptions.part,
-				skin: partOptions.skin,
-				color: '#000000',
-				position: { x: 0, y: 0 },
-				rotation: 0,
-				scale: 1,
-				opacity: 1,
-				flip: false,
-				mirror: false,
-				layer: 0,
+				part: 		part,
+				skin: 		partOptions.skin,
+				color: 		'#000000',
+				position: 	{ x: 0, y: 0 },
+				rotation: 	0,
+				scale: 		1,
+				opacity: 	1,
+				flip: 		false,
+				mirror: 	false,
+				layer: 		0,
 			})
 		}
 
@@ -452,28 +460,29 @@ module.exports = class Command extends BaseCommand {
 			collector.stop()
 		}
 
-		async function save() {
+		async function save(i) {
 			try {
 
 				const requiredParts = action.dataparts.required
 
-				const missingParts = requiredParts.filter((part) => !action.parts[part])
+				const missingParts = requiredParts.filter((part) => !action.parts.get(part))
 
 				if (missingParts.length > 0) {
-					return interaction.reply({ content: LanguagesController.content('messages.characters.customCharacter.missingParts', { parts: missingParts.join(', ') }), ephemeral: true })
+					return i.followUp({ content: LanguagesController.content('messages.characters.customCharacter.missingParts', { parts: missingParts.join(', ') }), ephemeral: true })
 				}
 
 				const skinData = {
-					buffer: action.buffer,
-					parts: action.parts,
+					buffer: action.skinBuffer,
+					base64: Buffer.from(action.skinBuffer).toString('base64'),
+					parts: [...action.parts.values()],
 				}
+
 				await Character.setSkin(action.character, skinData)
-				action.concluded = true
 				return collector.stop()
 			}
 			catch (error) {
 				console.log(error)
-				return interaction.reply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
+				return i.followUp({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true })
 			}
 		}
 
@@ -500,12 +509,13 @@ module.exports = class Command extends BaseCommand {
 							await selectTemplate(templateId)
 							templateInteraction.deferUpdate().then(() => {
 								templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.templateselected', { template: templateId }), components: [] })
-								templateCollector.stop()
 							})
 						}
 						catch (error) {
 							console.log(error)
 							templateInteraction.editReply({ content: LanguagesController.content('messages.characters.customCharacter.error'), ephemeral: true, components: [] })
+						}
+						finally {
 							templateCollector.stop()
 						}
 					}
@@ -550,7 +560,7 @@ module.exports = class Command extends BaseCommand {
 					case 'cancel':
 						return cancel()
 					case 'save':
-						return save()
+						return save(i)
 					case 'templates':
 						return showTemplates(i)
 					}
@@ -566,7 +576,6 @@ module.exports = class Command extends BaseCommand {
 
 		collector.on('end', async () => {
 			ActionController.removeAction(interaction.user.id, ['customcharacter_command', 'use_character'])
-			if (action.concluded) return
 			const newCharactersMsg = await interaction.channel.messages.fetch(customMsg.id)
 			disableAllComponents(newCharactersMsg)
 		})

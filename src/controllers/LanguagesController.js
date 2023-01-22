@@ -18,7 +18,8 @@ module.exports = class LanguagesController {
 	content(key, vars, lang = this.lang) {
 		try {
 			if (!this.get(lang)) {
-				console.log(`[LANGUAGE] Language ${lang} not found`.red)
+				const receivedFrom = new Error().stack.split('\n')[2].trim()
+				console.log(`[LANGUAGE] Language ${lang} not found\n${receivedFrom}`.red)
 				return process.exit(1)
 			}
 			let contentkey = this.get(lang)
@@ -40,7 +41,8 @@ module.exports = class LanguagesController {
 			if (vars && vars.undefined) {
 				return this.content(vars.undefined, vars, lang)
 			}
-			console.log(`[LANGUAGE] An error occurred while trying to get the content of the key ${key} in the language ${lang}\nERROR MESSAGE: ${error.message}`.red)
+			const receivedFrom = new Error().stack.split('\n')[2].trim()
+			console.log(`[LANGUAGE] An error occurred while trying to get the content of the key ${key} in the language ${lang}\nERROR MESSAGE: ${error.message}\n${receivedFrom}`.red)
 			return '{...' + key.slice(key.lastIndexOf('.') + 1) + '}'
 		}
 	}
@@ -69,7 +71,8 @@ module.exports = class LanguagesController {
 				const oldvarkey = vars[key]
 				vars[key] = contentkey
 				if (!vars[key]) {
-					console.log(`[LANGUAGE] An error occurred while trying to get the content of the key ${key + ': ' + oldvarkey} in the language ${lang}`.red)
+					const receivedFrom = new Error().stack.split('\n')[2].trim()
+					console.log(`[LANGUAGE] An error occurred while trying to get the content of the key ${key + ': ' + oldvarkey} in the language ${lang}\n${receivedFrom}`.red)
 					return '{...' + key.slice(key.lastIndexOf('.') + 1) + '}'
 				}
 			}
