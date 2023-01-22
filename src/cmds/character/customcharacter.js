@@ -85,7 +85,7 @@ module.exports = class Command extends BaseCommand {
 				}),
 				'parts': parts.map((part) => {
 					return {
-						label: `${LanguagesController.content(`nouns.${part}`)} ${action.dataparts.required.includes(part) ? `(${LanguagesController.content('nouns.required')} *)` : ''}`,
+						label: `${LanguagesController.content(`nouns.${part}`)} ${action.dataparts.required.includes(part) ? `${action.parts.get(part) ? '✅' : '❌'}` : ''}`,
 						value: part,
 						emoji: '👋',
 						default: action.selectedpart === part,
