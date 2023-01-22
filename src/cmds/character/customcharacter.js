@@ -52,7 +52,7 @@ module.exports = class Command extends BaseCommand {
 		const getCustomMenus = async () => {
 
 			const parts = Object.keys(action.dataparts.all)
-			const actions = [ { name: 'home', emoji: '🏠' }, { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'templates', emoji: '📋' }, { name: 'reset', emoji: '🔁' } ]
+			const actions = [ { name: 'save', emoji: '💾' }, { name: 'cancel', emoji: '❌' }, { name: 'templates', emoji: '📋' }, { name: 'reset', emoji: '🔁' } ]
 			const editcomponents = [ { name: 'reset', emoji: '🔁' }, { name: 'layer', emoji: '🔺' }, { name: 'color', emoji: '🎨' }, { name: 'position', emoji: '📏' }, { name: 'size', emoji: '📐' }, { name: 'flip', emoji: '🔴' }, { name: 'mirror', emoji: '🪞' }, { name: 'filter', emoji: '🔴' } ]
 			const skincomponents = action.dataparts.all[action.selectedpart] || ['default']
 			const skinAttachment = action.skinBuffer ? new AttachmentBuilder(action.skinBuffer, { name: 'skin.png' }) : null
@@ -128,7 +128,7 @@ module.exports = class Command extends BaseCommand {
 					new StringSelectMenuBuilder()
 						.setCustomId('editcomponent')
 						.setPlaceholder(LanguagesController.content('nouns.editcomponent'))
-						.setDisabled(action.selectedcomponent ? false : true)
+						.setDisabled(action.parts.get(action.selectedpart)?.component ? false : true)
 						.addOptions(menuOptions.editcomponents),
 				]),
 			]
