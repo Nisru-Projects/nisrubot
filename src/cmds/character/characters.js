@@ -3,9 +3,10 @@ const { ActionRowBuilder, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, M
 const disableAllComponents = require('../../utils/disableAllComponents')
 const CharacterController = require('../../controllers/CharacterController')
 const ActionsController = require('../../controllers/ActionsController')
-const { calculateLevel } = require('../../utils/levelingForms')
+const { calculateLevel, percentageToNextLevel } = require('../../utils/levelingForms')
 const uppercaseFirstLetter = require('../../utils/uppercaseFirstLetter')
 const randomString = require('../../utils/randomString')
+const asciiProgressbar = require('../../utils/asciiProgressbar')
 
 const elements = [
 	{ name: 'fire', value: 'fire', emoji: '🔥', description: 'Fire', canSelect: true },
@@ -186,7 +187,10 @@ module.exports = class Command extends BaseCommand {
 
 				for (const character_id of characters.characters) {
 					const character = (await Character.getCharacterInfo(character_id, 'characters_geral'))['characters_geral.*']
-					charactersFields.push({ name: character.essence.name, value: calculateLevel(character.exp).toString() })
+					const characterInfos = []
+					const progressbar = asciiProgressbar({ percent: percentageToNextLevel(character.exp), size: 10 })
+					characterInfos.push(LanguagesController.content('messages.characters.currentLevelProgress', { progressbar, currentlevel: calculateLevel(character.exp), nextlevel: calculateLevel(character.exp) + 1 }))
+					charactersFields.push({ name: character.essence.name, value: characterInfos.join('\n') })
 					selectionMenu.addOptions({
 						value: character.character_id,
 						label: character.essence.name,

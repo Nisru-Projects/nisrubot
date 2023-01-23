@@ -19,7 +19,6 @@ class GlobalData {
 	}
 
 	async set(key, value) {
-		console.log(key, value)
 		await this.DataManager.set({ 'global_data': this.DataManager.clientId }, { [`global_data.${key}`]: value })
 	}
 
@@ -35,10 +34,10 @@ class GlobalData {
 	async increment(key, value) {
 		const data = await this.get(key)
 		if (data[`global_data.${key}`] == null) {
-			await this.set(key, value)
+			await this.set(key, Number(value))
 		}
 		else {
-			await this.set(key, data[`global_data.${key}`] + value)
+			await this.set(key, Number(data[`global_data.${key}`]) + Number(value))
 		}
 	}
 

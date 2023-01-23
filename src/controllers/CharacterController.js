@@ -134,7 +134,7 @@ module.exports = class CharacterController {
 	}
 
 	getCharacterInfo(character_id, table) {
-		return this.client.dataManager.get(character_id, `${table}.*`)
+		return this.client.dataManager.get(character_id, `${table}.*`, true)
 	}
 
 	getCacheSkins() {
