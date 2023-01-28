@@ -13,7 +13,7 @@ module.exports = {
 
 		// client.application.commands.set([]);
 
-		const commands = client.commands.map(cmd => {
+		const commands = client.commands.filter((cmd) => cmd.type != 'complementary').map(cmd => {
 			return {
 				name: cmd.name,
 				description: cmd.description ?? 'Sem descrição',
@@ -26,7 +26,7 @@ module.exports = {
 				await guild.commands.set(commands)
 			}
 			catch (error) {
-				console.log(`[ERROR] ${error.message}`.red)
+				console.log(`[ERROR] Error while setting commands, verifiy if command key exists in language file\n${error}`.red)
 			}
 		})
 

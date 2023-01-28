@@ -142,7 +142,7 @@ module.exports = class Command extends BaseCommand {
 
 		const LanguagesController = this.client.languages
 
-		const Character = new CharacterController(this.client, interaction.user)
+		const characterController = new CharacterController(this.client, interaction.user)
 
 		const action = {
 			possiblesConstellations: constellations.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * (5 - 2 + 1) + 2)),
@@ -186,7 +186,7 @@ module.exports = class Command extends BaseCommand {
 					.setPlaceholder(LanguagesController.content('messages.characters.charactersMenus.actioncharacter'))
 
 				for (const character_id of characters.characters) {
-					const character = (await Character.getCharacterInfo(character_id, 'characters_geral'))['characters_geral.*']
+					const character = (await characterController.getCharacterInfo(character_id, 'characters_geral'))['characters_geral.*']
 					const characterInfos = []
 					const progressbar = asciiProgressbar({ percent: percentageToNextLevel(character.exp), size: 10 })
 					characterInfos.push(LanguagesController.content('messages.characters.currentLevelProgress', { progressbar, currentlevel: calculateLevel(character.exp), nextlevel: calculateLevel(character.exp) + 1 }))
@@ -201,7 +201,7 @@ module.exports = class Command extends BaseCommand {
 				}
 
 				if (characters.selected_character) {
-					const selected_character = (await Character.getCharacterInfo(characters.selected_character, 'characters_geral'))['characters_geral.*']
+					const selected_character = (await characterController.getCharacterInfo(characters.selected_character, 'characters_geral'))['characters_geral.*']
 
 					actionMenu.setOptions([{
 						value: 'customize',
@@ -532,8 +532,13 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 						collector.stop()
 						return this.client.commands.get(this.client.languages.content('commands.customcharacter.name'))?.execute(i, characters)
 					}
+					if (value == 'visualize') {
+						await ActionController.removeAction(interaction.user.id, ['create_character', 'characters_command', 'use_character'])
+						collector.stop()
+						return this.client.commands.get(this.client.languages.content('commands.viewcharacter.name'))?.execute(i, characters)
+					}
 					if (value == 'delete') {
-						Character.deleteCharacter(action.character.id)
+						characterController.deleteCharacter(action.character.id)
 					}
 				}
 
@@ -549,7 +554,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 					}
 					if (i.customId == 'chselectionmenu') {
 						const characterid = i.values[0]
-						Character.selectCharacter(characterid)
+						characterController.selectCharacter(characterid)
 						characters.selected_character = characterid
 						return
 					}
@@ -644,7 +649,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 			}
 			if (i.customId === 'confirmcreation') {
 				action.concluded = true
-				Character.create(action.character)
+				characterController.create(action.character)
 				collector.emit('update_embed_creation', i)
 				collector.stop()
 				return
@@ -661,4 +666,5 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 		})
 
 	}
+
 }

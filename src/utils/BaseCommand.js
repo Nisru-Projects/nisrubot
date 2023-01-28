@@ -5,5 +5,6 @@ module.exports = class BaseCommand {
 		this.description = options.description || 'No description.',
 		this.options = options.options || undefined,
 		this.permissions = options.permissions || []
+		this.type = options.type || 'slash'
 	}
 }

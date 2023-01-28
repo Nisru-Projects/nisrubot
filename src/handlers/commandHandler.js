@@ -22,6 +22,6 @@ module.exports = (client) => {
 	})
 
 	client.commands = commandsCollection
-	console.log(`[COMMANDS] Loaded ${client.commands.size} commands`.green)
+	console.log(`[COMMANDS] Loaded ${client.commands.filter(cmd => cmd.type != 'complementary').size} commands (${client.commands.filter(cmd => cmd.type == 'complementary').size} complementary commands)`.green)
 
 }

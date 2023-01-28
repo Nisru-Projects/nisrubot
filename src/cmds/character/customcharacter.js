@@ -8,6 +8,7 @@ const randomString = require('../../utils/randomString')
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
+			type: 'complementary',
 			name: client.languages.content('commands.customcharacter.name'),
 			description: client.languages.content('commands.customcharacter.description'),
 			permissions: ['user'],
@@ -34,12 +35,12 @@ module.exports = class Command extends BaseCommand {
 
 		const LanguagesController = this.client.languages
 
-		const Character = new CharacterController(this.client, interaction.user)
+		const characterController = new CharacterController(this.client, interaction.user)
 
 		const action = {
 			reset: async () => {
 				action.user_id = interaction.user.id
-				action.character = await Character.getSelectedCharacterId()
+				action.character = await characterController.getSelectedCharacterId()
 				action.parts = new Map()
 				action.dataparts = JSON.parse(await redisCache.get('config:skins.json'))
 				action.selectedpart = undefined
@@ -50,7 +51,7 @@ module.exports = class Command extends BaseCommand {
 
 		await action.reset()
 
-		const currentSkin = await Character.getSkin(action.character)
+		const currentSkin = await characterController.getSkin(action.character)
 
 		if (currentSkin !== null) {
 			currentSkin.parts.map((part) => action.parts.set(part.part, part))
@@ -209,7 +210,7 @@ module.exports = class Command extends BaseCommand {
 		async function setNewComponent() {
 			const partOptions = action.parts.get(action.selectedpart)
 			action.parts.set(action.selectedpart, partOptions)
-			action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
+			action.skinBuffer = await characterController.makeSkinBuffer(action.parts.values())
 			collector.emit('update_menu_message')
 		}
 
@@ -241,7 +242,7 @@ module.exports = class Command extends BaseCommand {
 					await resetPartOptions(action.selectedpart)
 				}
 
-				action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
+				action.skinBuffer = await characterController.makeSkinBuffer(action.parts.values())
 
 				collector.emit('update_menu_message')
 			}
@@ -477,7 +478,7 @@ module.exports = class Command extends BaseCommand {
 					parts: [...action.parts.values()],
 				}
 
-				await Character.setSkin(action.character, skinData)
+				await characterController.setSkin(action.character, skinData)
 				return collector.stop()
 			}
 			catch (error) {
@@ -543,7 +544,7 @@ module.exports = class Command extends BaseCommand {
 				})
 				await resetPartOptions(part)
 			}
-			action.skinBuffer = await Character.makeSkinBuffer(action.parts.values())
+			action.skinBuffer = await characterController.makeSkinBuffer(action.parts.values())
 			collector.emit('update_menu_message')
 		}
 
