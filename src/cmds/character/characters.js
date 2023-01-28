@@ -532,6 +532,9 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 						collector.stop()
 						return this.client.commands.get(this.client.languages.content('commands.customcharacter.name'))?.execute(i, characters)
 					}
+					if (value == 'delete') {
+						Character.deleteCharacter(action.character.id)
+					}
 				}
 
 				i.deferUpdate().then(async () => {

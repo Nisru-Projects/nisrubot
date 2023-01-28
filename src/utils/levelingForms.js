@@ -7,7 +7,7 @@ function calculateMaxExp(level) {
 }
 
 function calculateExpToNextLevel(exp) {
-	return Math.pow(calculateLevel(exp) + 1, 3) - exp
+	return Math.min(Math.pow(calculateLevel(exp) + 1, 3), Math.pow(70, 3))
 }
 
 function percentageToNextLevel(exp) {
@@ -15,7 +15,6 @@ function percentageToNextLevel(exp) {
 	const level = calculateLevel(exp)
 	const maxExp = calculateMaxExp(level)
 	const expToNextLevel = calculateExpToNextLevel(exp)
-	console.log(expToNextLevel, maxExp, level)
 	return (expToNextLevel / maxExp) * 100
 }
 
