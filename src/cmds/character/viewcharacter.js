@@ -51,11 +51,8 @@ module.exports = class Command extends BaseCommand {
 			const levelProgressbar = asciiProgressbar({ percent: percentageToNextLevel(characterInfo.exp), size: 10 })
 
 			const levelInfo = LanguagesController.content('messages.characters.currentLevelProgress', { progressbar: levelProgressbar, currentlevel: calculateLevel(characterInfo.exp), nextlevel: calculateLevel(characterInfo.exp) + 1 })
-
 			const raceInfo = `${LanguagesController.content('nouns.race')}: \`${LanguagesController.content(`races.${characterInfo.essence.race}`)}\``
-
 			const elementInfo = `${LanguagesController.content('nouns.element')}: \`${LanguagesController.content(`elements.${characterInfo.essence.element}`, { undefined: 'nouns.undefined' })}\``
-
 			const constellationInfo = `${LanguagesController.content('nouns.constellation')}: \`${LanguagesController.content(`constellations.${characterInfo.essence.constellation}`, { undefined: 'nouns.undefined' })}\``
 
 			const genderIcon = (gender) => {

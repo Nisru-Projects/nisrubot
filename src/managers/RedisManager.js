@@ -4,12 +4,12 @@ module.exports = class RedisManager {
 	loadData(client) {
 		client.redisCache = this
 		this.connect().then(() => {
-			console.log('[REDIS] Connected'.green)
+			console.log('[CACHE] Connected'.green)
 			this.clearWithPrefix('actions:').then(() => {
-				console.log('[REDIS] Actions cleared'.yellow)
+				console.log('[CACHE] Actions cleared'.yellow)
 			})
 		}).catch(err => {
-			console.log(`[REDIS] Not connected: ${err.message}`.red)
+			console.log(`[CACHE] Not connected: ${err.message}`.red)
 			process.exit(1)
 		})
 

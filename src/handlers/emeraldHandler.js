@@ -60,10 +60,38 @@ module.exports = async (client) => {
 		})
 	}
 
+	async function loadWorldTiles() {
+
+		try {
+			const res = await emeraldManager.getFiles('nisruemerald', 'resources/worldTiles')
+			let count = 0
+			for (const tile of res.data) {
+				if (tile.type === 'file') {
+					const inCache = await client.redisCache.get(`worldTiles:${tile.path}`)
+					if (inCache) continue
+					const content = await emeraldManager.getContent(tile.download_url, true)
+					const tileData = {
+						name: tile.name,
+						path: tile.path,
+						size: tile.size,
+						data: content.data,
+					}
+					client.redisCache.set(`worldTiles:${tileData.path}`, JSON.stringify(tileData))
+					count++
+				}
+			}
+			console.log(`[CACHE] Loaded ${count} world tiles`.green)
+		}
+		catch {
+			console.log('[CACHE] No world tiles found'.red)
+		}
+
+	}
+
 	async function loadGlobalData() {
 		client.dataManager.GlobalData.setClientIfNotExists()
 	}
-
+	loadWorldTiles()
 	await loadConfigs()
 	await loadLanguages()
 	await loadSkins()
