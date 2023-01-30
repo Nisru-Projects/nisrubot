@@ -11,6 +11,10 @@ module.exports = class MiddlewareController {
 		}
 	}
 
+	async isReadyToPlay() {
+		return !Object.values(this.client.readyToPlay)?.includes(false)
+	}
+
 	async checkPermissions(cmdPermissions) {
 
 		const user_data = await this.client.dataManager.get(this.interaction.user.id, ['users.permissions'], true)

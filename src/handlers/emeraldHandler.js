@@ -62,6 +62,8 @@ module.exports = async (client) => {
 
 	async function loadWorldTiles() {
 
+		const time = Date.now()
+
 		try {
 			const res = await emeraldManager.getFiles('nisruemerald', 'resources/worldTiles')
 			let count = 0
@@ -80,7 +82,7 @@ module.exports = async (client) => {
 					count++
 				}
 			}
-			console.log(`[CACHE] Loaded ${count} world tiles`.green)
+			console.log(`[CACHE] Loaded ${count} world tiles in ${(Date.now() - time) / 1000}s`.green)
 		}
 		catch {
 			console.log('[CACHE] No world tiles found'.red)
@@ -91,11 +93,24 @@ module.exports = async (client) => {
 	async function loadGlobalData() {
 		client.dataManager.GlobalData.setClientIfNotExists()
 	}
-	loadWorldTiles()
+
+	client.readyToPlay = {
+		worldtiles: false,
+		configs: false,
+		languages: false,
+		skins: false,
+		globalData: false,
+	}
+	await loadWorldTiles()
+	client.readyToPlay.worldtiles = true
 	await loadConfigs()
+	client.readyToPlay.configs = true
 	await loadLanguages()
+	client.readyToPlay.languages = true
 	await loadSkins()
+	client.readyToPlay.skins = true
 	await loadGlobalData()
+	client.readyToPlay.globalData = true
 
 	return true
 

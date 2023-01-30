@@ -13,6 +13,8 @@ module.exports = {
 
 		const Middleware = new MiddlewareController(client, interaction)
 
+		if (!Middleware.isReadyToPlay()) return interaction.reply({ content: 'The bot is not ready to play, please wait a few seconds.', ephemeral: true })
+
 		if (interaction.isCommand()) {
 			const cmd = client.commands?.get(interaction.commandName)
 			if (!cmd) return
