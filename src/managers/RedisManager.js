@@ -3,8 +3,9 @@ const redisClient = createClient({ url: `redis://${process.env.REDIS_HOST || 'lo
 module.exports = class RedisManager {
 	loadData(client) {
 		client.redisCache = this
+		const time = Date.now()
 		this.connect().then(() => {
-			console.log('[CACHE] Connected'.green)
+			console.log(`[CACHE] Connected in ${(Date.now() - time) / 1000}s`.green)
 			this.clearWithPrefix('actions:').then(() => {
 				console.log('[CACHE] Actions cleared'.yellow)
 			})

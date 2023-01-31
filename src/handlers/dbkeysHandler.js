@@ -1,4 +1,4 @@
-module.exports = (client) => {
+module.exports = (client, time) => {
 
 	client.knexDatabase.keys = []
 	client.knexDatabase.raw('SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = \'public\'').then(async (res) => {
@@ -18,7 +18,7 @@ module.exports = (client) => {
 			return 0
 		})
 
-		return console.log(`[DATABASE] Loaded with ${client.knexDatabase.keys.length} keys`.green)
+		return console.log(`[DATABASE] Loaded with ${client.knexDatabase.keys.length} keys in ${(Date.now() - time) / 1000}s`.green)
 	})
 
 }

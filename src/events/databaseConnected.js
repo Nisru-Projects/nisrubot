@@ -1,6 +1,7 @@
+const dbkeysHandler = require('../handlers/dbkeysHandler')
 module.exports = {
 	name: 'databaseConnected',
-	execute: async (client) => {
-		require('../handlers/dbkeysHandler')(client)
+	execute: async (client, time) => {
+		dbkeysHandler(client, time)
 	},
 }

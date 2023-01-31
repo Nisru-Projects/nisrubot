@@ -5,6 +5,8 @@ module.exports = class PgBaseManager {
 
 	loadData(client, options = this.options) {
 
+		const time = Date.now()
+
 		const knex = require('knex')({
 			client: 'pg',
 			connection: {
@@ -19,7 +21,7 @@ module.exports = class PgBaseManager {
 		})
 
 		knex.raw('select 1+1 as result').then(() => {
-			client.emit('databaseConnected', client)
+			client.emit('databaseConnected', time)
 		}).catch(err => {
 			console.log(`[DATABASE] Not connected: ${err.message}`.red)
 			process.exit(1)

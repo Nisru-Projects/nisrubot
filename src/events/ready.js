@@ -27,6 +27,7 @@ module.exports = {
 			}
 			catch (error) {
 				console.log(`[ERROR] Error while setting commands, verifiy if command key exists in language file\n${error}`.red)
+				process.exit(1)
 			}
 		})
 

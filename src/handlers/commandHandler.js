@@ -5,6 +5,8 @@ module.exports = (client) => {
 
 	const categories = readdirSync('./src/cmds/')
 
+	const time = Date.now()
+
 	categories.forEach(category => {
 		const commands = readdirSync(`./src/cmds/${category}`)
 		commands.filter(file => !file.includes('!') && file.endsWith('.js')).forEach(file => {
@@ -22,6 +24,6 @@ module.exports = (client) => {
 	})
 
 	client.commands = commandsCollection
-	console.log(`[COMMANDS] Loaded ${client.commands.filter(cmd => cmd.type != 'complementary').size} commands (${client.commands.filter(cmd => cmd.type == 'complementary').size} complementary commands)`.green)
+	console.log(`[COMMANDS] Loaded ${client.commands.filter(cmd => cmd.type != 'complementary').size} commands (${client.commands.filter(cmd => cmd.type == 'complementary').size} complementary commands) in ${(Date.now() - time) / 1000}s`.green)
 
 }
