@@ -18,7 +18,7 @@ module.exports = class Command extends BaseCommand {
 
 		const tileWidth = 1879
 		const tileHeight = 934
-		const scale = 0.6
+		const scale = 1
 		const playerWidth = tileWidth * scale
 		const playerHeight = tileHeight * scale
 		const totalWidth = tileWidth * 10
