@@ -1,0 +1,60 @@
+version: '3'
+services:
+  redis:
+    container_name: redis
+    image: redis
+    restart: always
+    networks:
+      - webnet
+    ports:
+      - "6379:6379"
+  postgres:
+    container_name: postgres
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database
+    networks:
+      - webnet
+      - postgres-compose-network
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    networks:
+      - postgres-compose-network
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: email@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: password
+  app:
+    container_name: nisrubot
+    build: .
+    command: npm start
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - webnet
+      - postgres-compose-network
+    volumes:
+      - .:/usr/app
+    links:
+      - postgres
+      - redis
+    environment:
+      DB_HOST: postgres
+      REDIS_HOST: redis
+networks:
+  webnet:
+  postgres-compose-network:
+    driver: bridge

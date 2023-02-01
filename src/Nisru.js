@@ -1,97 +1,46 @@
-const Discord = require('discord.js');
-const fs = require('fs');
-const { readdirSync } = require('fs');
+const { GatewayIntentBits, Client } = require('discord.js')
+process.removeAllListeners('warning')
+const eventsHandler = require('./handlers/eventsHandler')
+const DbManager = require('./managers/DbManager')
+const RedisManager = require('./managers/RedisManager')
+const DataManager = require('./managers/DataManager')
 
-module.exports = class MenuClient extends Discord.Client {
+module.exports = class NisruClient extends Client {
 
-    constructor(options = {}) {
+	constructor(options = {}) {
 
-        super({
-        
-            disableMentions: 'everyone', 
-            intents: ['GUILDS', 'GUILD_MESSAGES']
-            
-        })
+		super({
+			allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
+			intents: [GatewayIntentBits.Guilds],
+		})
 
-        console.log(' ');
-        this.verification(options)
-        this.loadCommands()
-        this.loadEvents()
-        this.loadData(options)
-    }
+		console.log(' ')
+		eventsHandler(this)
 
-    verification(options) {
-        if (!options.BOT_TOKEN) {
-            console.log(`[ERRO] Token não informado`.red)
-            return
-        }
-        this.token = options.BOT_TOKEN
-        this.config = options
-    }
+		const Database = new DbManager(options)
+		const RedisCache = new RedisManager(this)
 
-    loadCommands() {
-        
-        const x = new Discord.Collection();
+		this.dataManager = new DataManager(Database.loadData(this), RedisCache.loadData(this))
 
-        const commands = readdirSync('./src/cmds/');
+		this.dataManager.createBackup()
+		this.dataManager.deleteOldBackups()
+		this.dataManager.clientId = options[options.mode].BOT_ID
 
-        commands.forEach(category => {
-            const commands = readdirSync(`./src/cmds/${category}`);
-            commands.forEach(file => {
+		this.verification(options)
 
-                let Command = require('./cmds/' + category + '/' + file.replace('.js', ''))
+	}
 
-                let cmd = new Command(this);
+	verification(options) {
+		if (!options[options.mode].BOT_TOKEN) {
+			console.log('[ERROR] Token not found'.red)
+			return process.exit(1)
+		}
+		this.token = options[options.mode].BOT_TOKEN
+		this.config = options
+	}
 
-                if (!file.includes('!')) x.set(cmd.name, cmd)
-
-            })
-        })
-
-        this.commands = x
-        
-        console.log(`[COMANDOS] Carregados`.green )
-    }
-
-    loadData(options) {
-
-        const db = require('knex')({
-            client: 'pg',
-            connection: {
-              host : options.DB_HOST,
-              port : options.DB_PORT,
-              user : options.DB_USER,
-              password : options.DB_PASSWORD,
-              database : options.DB_DATABASE,
-              supportBigNumbers: true,
-              bigNumberStrings: true,
-            }
-        });
-
-        this.db = db;
-
-        db.raw('select 1+1 as result').then(() => {
-            this.emit('databaseConnected', this)
-        }).catch(err => {
-            console.log(`[DATABASE] Não conectado`.red )
-            process.exit(1);
-        });
-    
-    }
-
-    loadEvents() {
-        fs.readdir("./src/events/", (err, files) => {
-            if (err) return console.error(err);
-            files.forEach(file => {
-                let eventFunction = require(`./events/${file}`);
-                this.on(eventFunction.name, (...args) => eventFunction.execute(this, ...args));
-            });
-        });
-        console.log(`[EVENTOS] Carregados`.green )
-    }
-
-    async login() {
-        await super.login(this.token);
-    }
+	async login() {
+		await super.login(this.token)
+	}
 
 }

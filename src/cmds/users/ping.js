@@ -1,16 +1,20 @@
-const BaseCommand = require("../../BaseCommand");
+const BaseCommand = require('../../utils/BaseCommand')
 
-class Command extends BaseCommand {
+module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
-			name: 'ping',
-			description: 'Verifica a latência do bot'
-		});
+			name: client.languages.content('commands.ping.name'),
+			description: client.languages.content('commands.ping.name'),
+			permissions: ['user'],
+		})
 	}
-
-	execute(client, interaction) {
-		return interaction.reply({ content: `Latência atual: ${client.ws.ping}ms` });
+	execute(interaction) {
+		const client = this.client
+		function ping(letping) {
+			return client.languages.content('messages.ping.ping', { ping: letping, api: client.ws.ping })
+		}
+		return interaction.reply({ fetchReply: true, content: ping('{%messages.ping.calculating') }).then(msg => {
+			msg.edit({ content: ping(msg.createdTimestamp - interaction.createdTimestamp) })
+		})
 	}
 }
-
-module.exports = Command

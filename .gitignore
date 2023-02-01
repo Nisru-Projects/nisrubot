@@ -126,5 +126,7 @@ dist
 .yarn/install-state.gz
 .pnp.*
 config.json
+docker-compose.yml
 yarn.lock
-package-lock.json
+postgres
+backups

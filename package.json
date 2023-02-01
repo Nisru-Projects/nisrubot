@@ -3,21 +3,39 @@
   "version": "1.0.0",
   "description": "A simple discord bot.",
   "main": "index.js",
-  "repository": "https://github.com/Nisru-Projects/nisruignite.git",
-  "author": "Eman134#3237 <kaykeeman@gmail.com>",
+  "repository": "https://github.com/Nisru-Projects/nisrubot.git",
+  "author": "Eman134 <kaykeeman@gmail.com>",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
   },
   "keywords": [
     "discordjs"
   ],
   "license": "ISC",
   "dependencies": {
+    "@redis/json": "^1.0.4",
+    "axios": "^1.2.1",
+    "canvas": "^2.11.0",
     "colors": "^1.4.0",
-    "discord.js": "^13.8.1",
+    "discord.js": "^14.7.1",
     "fs": "^0.0.1-security",
-    "knex": "^2.1.0",
+    "knex": "^2.3.0",
+    "nodemon": "^2.0.20",
+    "openai": "^3.1.0",
     "pg": "^8.7.3",
+    "redis": "^4.5.1",
     "sqlite3": "^5.0.8"
+  },
+  "devDependencies": {
+    "eslint": "^8.30.0"
+  },
+  "nodemonConfig": {
+    "legacyWatch": true,
+    "delay": 1000,
+    "ignore": [
+      "backups"
+    ]
   }
 }
