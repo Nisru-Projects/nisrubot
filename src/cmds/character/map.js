@@ -68,7 +68,7 @@ module.exports = class Command extends BaseCommand {
 
 		const imageCheckAreaData = ctx.getImageData(playerPositionTile.x - checkArea, playerPositionTile.y - checkArea, checkArea * 2, checkArea * 2)
 
-		const checkAreaCanvas = Canvas.createCanvas(checkArea * 2, checkArea * 2)
+		const checkAreaCanvas = Canvas.createCanvas(checkArea, checkArea)
 		const checkAreaCtx = checkAreaCanvas.getContext('2d')
 		checkAreaCtx.putImageData(imageCheckAreaData, 0, 0)
 
@@ -76,7 +76,7 @@ module.exports = class Command extends BaseCommand {
 		ctx.fillRect(playerPositionTile.x, playerPositionTile.y, 10, 10)
 
 		ctx.beginPath()
-		ctx.arc(playerPositionTile.x + 5, playerPositionTile.y + 5, 50, 0, Math.PI * 2, true)
+		ctx.arc(playerPositionTile.x + 5, playerPositionTile.y + 5, 25, 0, Math.PI * 2, true)
 		ctx.closePath()
 		ctx.strokeStyle = '#FF0000'
 		ctx.stroke()
@@ -91,7 +91,7 @@ module.exports = class Command extends BaseCommand {
 
 		if (inWater) {
 			ctx.beginPath()
-			ctx.arc(playerPositionTile.x + 5, playerPositionTile.y + 5, 60, 0, Math.PI * 2, true)
+			ctx.arc(playerPositionTile.x + 5, playerPositionTile.y + 5, 30, 0, Math.PI * 2, true)
 			ctx.closePath()
 			ctx.strokeStyle = '#00FF00'
 			ctx.stroke()

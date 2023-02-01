@@ -51,6 +51,9 @@ module.exports = class DataManager {
 	}
 
 	async createBackup() {
+		if (!fs.existsSync(path.join(__dirname, '..', '..', 'backups'))) {
+			fs.mkdirSync(path.join(__dirname, '..', '..', 'backups'))
+		}
 		const backupFiles = fs.readdirSync(path.join(__dirname, '..', '..', 'backups'))
 		const lastBackup = backupFiles[backupFiles.length - 1]
 		if (lastBackup) {
