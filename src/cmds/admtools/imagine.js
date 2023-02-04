@@ -5,7 +5,7 @@ const BaseCommand = require('../../utils/BaseCommand')
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
-			name: client.languages.content('commands.imagine.name'),
+			name: 'imagine',
 			description: client.languages.content('commands.imagine.name'),
 			permissions: ['admin.tools.imagine'],
 			options: [

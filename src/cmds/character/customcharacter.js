@@ -9,8 +9,7 @@ module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
 			type: 'complementary',
-			name: client.languages.content('commands.customcharacter.name'),
-			description: client.languages.content('commands.customcharacter.description'),
+			name: 'customcharacter',
 			permissions: ['user'],
 		})
 	}

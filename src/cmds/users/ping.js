@@ -3,8 +3,7 @@ const BaseCommand = require('../../utils/BaseCommand')
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
-			name: client.languages.content('commands.ping.name'),
-			description: client.languages.content('commands.ping.name'),
+			name: 'ping',
 			permissions: ['user'],
 		})
 	}

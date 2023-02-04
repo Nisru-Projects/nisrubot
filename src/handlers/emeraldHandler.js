@@ -67,6 +67,15 @@ module.exports = async (client) => {
 
 	async function loadWorldTiles() {
 
+		try {
+			const res = await emeraldManager.getFiles('nisruemerald', 'resources/fullworld.png')
+			const content = await emeraldManager.getContent(res.data[0].download_url, true)
+			client.redisCache.set('fullworld', content.data)
+		}
+		catch (error) {
+			console.log('[CACHE] No fullworld file found'.red)
+		}
+
 		const time = Date.now()
 
 		try {

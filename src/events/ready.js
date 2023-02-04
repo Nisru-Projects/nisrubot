@@ -15,8 +15,8 @@ module.exports = {
 
 		const commands = client.commands.filter((cmd) => cmd.type != 'complementary').map(cmd => {
 			return {
-				name: cmd.name,
-				description: cmd.description ?? 'Sem descrição',
+				name: client.languages.content(`commands.${cmd.name}.name`),
+				description: client.languages.content(`commands.${cmd.name}.description`, { undefined: 'nouns.undefined' }),
 				options: cmd.options,
 			}
 		})

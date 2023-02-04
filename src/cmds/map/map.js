@@ -7,8 +7,7 @@ const isWater = require('../../utils/isWater')
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
-			name: client.languages.content('commands.map.name'),
-			description: client.languages.content('commands.map.name'),
+			name: 'map',
 			permissions: ['user'],
 		})
 	}

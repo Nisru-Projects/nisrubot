@@ -9,8 +9,7 @@ const randomString = require('../../utils/randomString')
 module.exports = class Command extends BaseCommand {
 	constructor(client) {
 		super(client, {
-			name: client.languages.content('commands.viewcharacter.name'),
-			description: client.languages.content('commands.viewcharacter.name'),
+			name: 'viewcharacter',
 			permissions: ['user'],
 		})
 	}

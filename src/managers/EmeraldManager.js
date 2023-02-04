@@ -3,7 +3,7 @@ const axios = require('axios')
 module.exports = class EmeraldManager {
 	constructor(emeraldtoken) {
 		this.emeraldtoken = emeraldtoken
-		this.BASE_URL = ' https://api.github.com'
+		this.BASE_URL = 'https://api.github.com'
 		this.OWNER = 'Nisru-Projects'
 		this.headers = {
 			Authorization: `Bearer ${this.emeraldtoken}`,
