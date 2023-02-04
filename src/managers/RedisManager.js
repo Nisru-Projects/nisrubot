@@ -28,7 +28,7 @@ module.exports = class RedisManager {
 		}
 	}
 
-	clear() {
+	clearAll() {
 		return redisClient.flushAll()
 	}
 

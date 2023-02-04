@@ -11,6 +11,18 @@ module.exports = class LanguagesController {
 		return this[lang]
 	}
 
+	getCommandKey(translatedCommand, lang = this.lang) {
+		const keys = Object.keys(this.get(lang).commands)
+
+		for (const key of keys) {
+			if (this.get(lang).commands[key].name == translatedCommand) {
+				return key
+			}
+		}
+
+		return translatedCommand
+	}
+
 	add(lang) {
 		this.set(lang.name, lang)
 	}

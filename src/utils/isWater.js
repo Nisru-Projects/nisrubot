@@ -35,6 +35,7 @@ module.exports = (checkAreaCanvas, checkAreaCtx) => {
 		[136, 158, 190],
 		[116, 123, 132],
 		[144, 166, 198],
+		[110, 133, 168],
 	]
 
 	const notWaterColors = [
@@ -49,6 +50,7 @@ module.exports = (checkAreaCanvas, checkAreaCtx) => {
 		[126, 138, 155],
 		[126, 130, 137],
 		[128, 128, 128],
+		[205, 205, 205],
 	]
 
 	const colors = {}

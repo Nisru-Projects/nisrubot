@@ -16,7 +16,10 @@ module.exports = {
 		if (!Middleware.isReadyToPlay()) return interaction.reply({ content: 'The bot is not ready to play, please wait a few seconds.', ephemeral: true })
 
 		if (interaction.isCommand()) {
-			const cmd = client.commands?.get(interaction.commandName)
+
+			const commandName = client.languages.getCommandKey(interaction.commandName)
+
+			const cmd = client.commands?.get(commandName)
 			if (!cmd) return
 
 			await Middleware.checkUser()
