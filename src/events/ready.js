@@ -32,7 +32,7 @@ module.exports = {
 		})
 
 		const time = Math.round(process.uptime())
-		console.log(`\n     Bot started in ${time}s\n`.green)
+		console.log(`\n     Client started in ${time}s\n`.green)
 
 		/* process.on('unhandledRejection', (reason) => {
 			const timeError = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
