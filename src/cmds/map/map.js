@@ -49,15 +49,14 @@ module.exports = class Command extends BaseCommand {
 		}
 
 		const tile = (Math.floor(playerPosition.x / tileWidth) + 1) + (Math.floor(playerPosition.y / tileHeight) * 10) - 1
-		// o tile vai seguindo de 0 a 100, em ordem crescente em fileiras
 
 		const playerExploredTiles = []
 
-		for (let i = 0; i < randomNumber(5, 15); i++) {
+		for (let i = 0; i < randomNumber(80, 100); i++) {
 			const tileN = randomNumber(0, 100)
 			if (playerExploredTiles.find(t => t.tile === tileN)) continue
 			playerExploredTiles.push({
-				percentage: randomNumber(0, 100),
+				percentage: randomNumber(80, 100),
 				tile: tileN,
 			})
 		}
@@ -157,12 +156,18 @@ module.exports = class Command extends BaseCommand {
 				y: (playerPosition.y / fullmapImage.height / 10) * fullmapImage.height,
 			}
 
+			const routingToPositionFullMap = {
+				x: (routingToPosition.x / fullmapImage.width / 10) * fullmapImage.width,
+				y: (routingToPosition.y / fullmapImage.height / 10) * fullmapImage.height,
+			}
+
 			const tileWidthInFullMap = fullmapImage.width / 10
 			const tileHeightInFullMap = fullmapImage.height / 10
 
 			ctx.drawImage(fullmapImage, 0, 0, fullmapImage.width, fullmapImage.height)
 
 			// fazer uma grid, separando em 100 tiles
+			/*
 			for (let i = 0; i <= 10; i++) {
 				ctx.beginPath()
 				ctx.moveTo(i * tileWidthInFullMap, 0)
@@ -179,13 +184,14 @@ module.exports = class Command extends BaseCommand {
 				ctx.closePath()
 				ctx.strokeStyle = '#FFFFFF'
 				ctx.stroke()
-			}
+			}*/
 
 			for (let i = 0; i < 10; i++) {
 				for (let j = 0; j < 10; j++) {
 					const currentCheckTile = ((j * 10) + i)
 					const explored = playerExploredTiles.find(ptile => ptile.tile === currentCheckTile)
-					const imageData = ctx.getImageData(i * tileWidthInFullMap, j * tileHeightInFullMap, tileWidthInFullMap, tileHeightInFullMap)
+					// adicionar mais um pixel no width e height para não ficar com um pixel branco na borda
+					const imageData = ctx.getImageData(i * tileWidthInFullMap, j * tileHeightInFullMap, tileWidthInFullMap + 1, tileHeightInFullMap + 1)
 					const data = imageData.data
 					for (let pixels = 0; pixels < data.length; pixels += 4) {
 						const minGray = (data[pixels] + data[pixels + 1] + data[pixels + 2]) / 3
@@ -208,10 +214,32 @@ module.exports = class Command extends BaseCommand {
 			ctx.fillRect(playerPositionFullMap.x, playerPositionFullMap.y, 10, 10)
 
 			ctx.beginPath()
-			ctx.arc(playerPositionFullMap.x + 5, playerPositionFullMap.y + 5, 25, 0, Math.PI * 2, true)
+			ctx.arc(playerPositionFullMap.x + 7, playerPositionFullMap.y + 7, 30, 0, Math.PI * 2, true)
 			ctx.closePath()
 			ctx.strokeStyle = '#FF0000'
 			ctx.stroke()
+
+			// desenhar a rota
+			if (isRouting) {
+				ctx.beginPath()
+				ctx.moveTo(playerPositionFullMap.x + 5, playerPositionFullMap.y + 5)
+				ctx.lineTo(routingToPositionFullMap.x + 5, routingToPositionFullMap.y + 5)
+				ctx.closePath()
+				ctx.strokeStyle = '#FF0000'
+				ctx.setLineDash([5, 15])
+				ctx.stroke()
+
+				ctx.beginPath()
+				ctx.arc(routingToPositionFullMap.x + 5, routingToPositionFullMap.y + 5, 30, 0, Math.PI * 2, true)
+				ctx.closePath()
+				// outra cor para a rota
+				ctx.strokeStyle = '#FF0000'
+				ctx.stroke()
+
+				ctx.fillStyle = '#FF0000'
+				ctx.fillRect(routingToPositionFullMap.x, routingToPositionFullMap.y, 10, 10)
+
+			}
 
 			return { buffer: canvas.toBuffer() }
 		}
