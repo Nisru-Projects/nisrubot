@@ -18,7 +18,7 @@ module.exports = class Command extends BaseCommand {
 		const redisCache = this.client.redisCache
 
 		const tileWidth = 1879
-		const tileHeight = 934
+		const tileHeight = 931
 
 		const scale = 1
 		const playerWidth = tileWidth * scale
@@ -39,17 +39,17 @@ module.exports = class Command extends BaseCommand {
 		}
 
 		const playerPositionTile = {
-			x: (playerPosition.x % tileWidth) * scale,
-			y: (playerPosition.y % tileHeight) * scale,
+			x: (playerPosition.x - Math.floor(playerPosition.x / tileWidth) * tileWidth),
+			y: (playerPosition.y - Math.floor(playerPosition.y / tileHeight) * tileHeight),
 		}
 
 		const routingToPositionTileDirection = {
-			x: (routingToPosition.x % tileWidth) * scale,
-			y: (routingToPosition.y % tileHeight) * scale,
+			x: (routingToPosition.x - Math.floor(routingToPosition.x / tileWidth) * tileWidth),
+			y: (routingToPosition.y - Math.floor(routingToPosition.y / tileHeight) * tileHeight),
 		}
 
+		const tile = (Math.floor(playerPosition.x / tileWidth) + 1) + (Math.floor(playerPosition.y / tileHeight) * 10) - 1
 		// o tile vai seguindo de 0 a 100, em ordem crescente em fileiras
-		const tile = (Math.floor(playerPosition.x / tileWidth) + 1) + (Math.floor(playerPosition.y / tileHeight) * 10)
 
 		const playerExploredTiles = []
 
@@ -151,9 +151,10 @@ module.exports = class Command extends BaseCommand {
 
 			const ctx = canvas.getContext('2d')
 
+			// o tamanho total é 10x10 tiles, cada tile tem tileWidth x tileHeight pixels, calcular a posição do player no mapa completo
 			const playerPositionFullMap = {
-				x: playerPosition.x * (fullmapImage.width / 1000),
-				y: playerPosition.y * (fullmapImage.height / 1000),
+				x: (playerPosition.x / fullmapImage.width / 10) * fullmapImage.width,
+				y: (playerPosition.y / fullmapImage.height / 10) * fullmapImage.height,
 			}
 
 			const tileWidthInFullMap = fullmapImage.width / 10
@@ -184,7 +185,6 @@ module.exports = class Command extends BaseCommand {
 				for (let j = 0; j < 10; j++) {
 					const currentCheckTile = ((j * 10) + i)
 					const explored = playerExploredTiles.find(ptile => ptile.tile === currentCheckTile)
-
 					const imageData = ctx.getImageData(i * tileWidthInFullMap, j * tileHeightInFullMap, tileWidthInFullMap, tileHeightInFullMap)
 					const data = imageData.data
 					for (let pixels = 0; pixels < data.length; pixels += 4) {
@@ -194,16 +194,15 @@ module.exports = class Command extends BaseCommand {
 						data[pixels + 1] = data[pixels + 1] * intensity + minGray * (1 - intensity)
 						data[pixels + 2] = data[pixels + 2] * intensity + minGray * (1 - intensity)
 					}
-
 					ctx.putImageData(imageData, i * tileWidthInFullMap, j * tileHeightInFullMap)
-
-					ctx.font = '20px Arial'
-					ctx.fillStyle = '#FFFFFF'
-					ctx.fillText(`${explored.percentage}%`, i * tileWidthInFullMap + 10, j * tileHeightInFullMap + 20)
-
+					if (explored.tile == tile) {
+						ctx.font = '20px Arial'
+						ctx.fillStyle = '#FFFFFF'
+						ctx.fillText(`${explored.percentage}%`, i * tileWidthInFullMap + 10, j * tileHeightInFullMap + 20)
+					}
 				}
-
 			}
+
 
 			ctx.fillStyle = '#FF0000'
 			ctx.fillRect(playerPositionFullMap.x, playerPositionFullMap.y, 10, 10)
@@ -225,9 +224,13 @@ module.exports = class Command extends BaseCommand {
 		const isRoutingMessage = isRouting ? `Rota para X: ${routingToPosition.x}, Y: ${routingToPosition.y}, Tile: ${localMap.routingTile}, Angulo: ${localMap.routingAngle}` : ''
 
 		const embedMap = new EmbedBuilder()
-			.setTitle('Mapa')
+			.setTitle('Mapa completo')
 			.setImage('attachment://fullmap.png')
 
-		interaction.editReply({ embeds: [embedMap], content: `[X: ${playerPosition.x}, Y: ${playerPosition.y}, Tile: ${tile}]\n${isRoutingMessage}\nEm água: ${localMap.inWater} (${localMap.waterPercentage * 100}%)`, files: [localMapAttachment, fullMapAttachment] })
+		const embedLocalMap = new EmbedBuilder()
+			.setTitle('Mapa local')
+			.setImage('attachment://localmap.png')
+
+		interaction.editReply({ embeds: [embedMap, embedLocalMap], content: `[X: ${playerPosition.x}, Y: ${playerPosition.y}, Tile: ${tile}]\n${isRoutingMessage}\nEm água: ${localMap.inWater} (${localMap.waterPercentage * 100}%)`, files: [localMapAttachment, fullMapAttachment] })
 	}
 }

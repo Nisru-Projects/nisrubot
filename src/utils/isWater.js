@@ -51,6 +51,8 @@ module.exports = (checkAreaCanvas, checkAreaCtx) => {
 		[126, 130, 137],
 		[128, 128, 128],
 		[205, 205, 205],
+		[120, 125, 134],
+		[127, 133, 142],
 	]
 
 	const colors = {}
