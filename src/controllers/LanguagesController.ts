@@ -1,17 +1,23 @@
-module.exports = class LanguagesController {
-	constructor(lang) {
+type Language = string
+type LanguageContent = Record<string, string | LanguageContent>
+
+export default class LanguagesController {
+
+	lang: Language
+
+	constructor(lang: Language) {
 		this.lang = lang || 'pt-BR'
 	}
 
-	set(name, lang) {
+	set(name: Language, lang: LanguageContent) {
 		this[name] = lang
 	}
 
-	get(lang) {
+	get(lang: Language) {
 		return this[lang]
 	}
 
-	getCommandKey(translatedCommand, lang = this.lang) {
+	getCommandKey(translatedCommand: string, lang = this.lang) {
 		const keys = Object.keys(this.get(lang).commands)
 
 		for (const key of keys) {
@@ -23,7 +29,7 @@ module.exports = class LanguagesController {
 		return translatedCommand
 	}
 
-	add(lang) {
+	add(lang: LanguageContent) {
 		this.set(lang.name, lang)
 	}
 

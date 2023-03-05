@@ -7,8 +7,8 @@
   "author": "Eman134 <kaykeeman@gmail.com>",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js",
-    "start": "node index.js"
+    "dev": "nodemon index.ts",
+    "start": "node index.ts"
   },
   "keywords": [
     "discordjs"
@@ -18,11 +18,11 @@
     "@redis/json": "^1.0.4",
     "axios": "^1.2.1",
     "canvas": "^2.11.0",
-    "colors": "^1.4.0",
+    "colors.ts": "^1.0.20",
     "discord.js": "^14.7.1",
     "fs": "^0.0.1-security",
     "knex": "^2.3.0",
-    "nodemon": "^2.0.20",
+    "nodemon": "^2.0.21",
     "openai": "^3.1.0",
     "pg": "^8.7.3",
     "redis": "^4.5.1",
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "eslint": "^8.30.0",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.5"
   },
   "nodemonConfig": {

@@ -1,3 +1,5 @@
+import NisruClient from "../Nisru"
+
 const commandHandler = require('../handlers/commandHandler')
 const emeraldHandler = require('../handlers/emeraldHandler')
 
@@ -5,7 +7,7 @@ module.exports = {
 
 	name: 'ready',
 	once: true,
-	execute: async (client) => {
+	execute: async (client: NisruClient) => {
 
 		await emeraldHandler(client)
 

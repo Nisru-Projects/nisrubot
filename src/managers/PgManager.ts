@@ -1,13 +1,20 @@
-module.exports = class PgBaseManager {
-	constructor(options) {
+import { Knex, knex } from 'knex'
+import NisruClient from '../Nisru'
+import { ConfigOptions } from '../types/config'
+
+export default class PgManager {
+
+	options: ConfigOptions['development' | 'production']
+
+	constructor(options: ConfigOptions) {
 		this.options = options[options.mode]
 	}
 
-	loadData(client, options = this.options) {
+	loadData(client: NisruClient, options = this.options) {
 
 		const time = Date.now()
 
-		const knex = require('knex')({
+		const config: Knex.Config = {
 			client: 'pg',
 			connection: {
 				host : options.DB_HOST,
@@ -18,16 +25,18 @@ module.exports = class PgBaseManager {
 				supportBigNumbers: true,
 				bigNumberStrings: true,
 			},
-		})
+		}
 
-		knex.raw('select 1+1 as result').then(() => {
+		const knexInstance = knex(config);
+
+		knexInstance.raw('select 1+1 as result').then(() => {
 			client.emit('databaseConnected', time)
 		}).catch(err => {
 			console.log(`[DATABASE] Not connected: ${err.message}`.red)
 			process.exit(1)
 		})
 
-		client.knexDatabase = knex
+		client.knexInstance = knex
 
 		return knex
 

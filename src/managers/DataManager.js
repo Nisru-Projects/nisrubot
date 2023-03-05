@@ -45,7 +45,7 @@ class GlobalData {
 
 module.exports = class DataManager {
 	constructor(knexDatabase, redisCache) {
-		this.knexDatabase = knexDatabase
+		this.knexInstance = knexDatabase
 		this.redisCache = redisCache
 		this.GlobalData = new GlobalData(this)
 	}
@@ -65,11 +65,11 @@ module.exports = class DataManager {
 			if (differenceInHours < 24) return console.log('[DATABASE] Backup already created today'.yellow)
 		}
 		try {
-			const backup = await this.knexDatabase.raw('SELECT * FROM information_schema.tables WHERE table_schema = \'public\'')
+			const backup = await this.knexInstance.raw('SELECT * FROM information_schema.tables WHERE table_schema = \'public\'')
 			const tables = backup.rows.map(table => table.table_name)
 			const backupData = {}
 			for (const table of tables) {
-				const data = await this.knexDatabase.raw(`SELECT * FROM ${table}`)
+				const data = await this.knexInstance.raw(`SELECT * FROM ${table}`)
 				backupData[table] = data
 			}
 			const formattedDate = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/\//g, '-').replace(/:/g, '-').replace(/ /g, '_').replace(/,/g, '')
@@ -104,14 +104,14 @@ module.exports = class DataManager {
 			const backupData = JSON.parse(fs.readFileSync(backupPath))
 			const tables = Object.keys(backupData)
 			for (const table of tables) {
-				await this.knexDatabase.raw(`DROP TABLE IF EXISTS ${table}`)
-				await this.knexDatabase.raw(backupData[table].command)
+				await this.knexInstance.raw(`DROP TABLE IF EXISTS ${table}`)
+				await this.knexInstance.raw(backupData[table].command)
 				const rows = backupData[table].rows
 				for (const row of rows) {
 					const columns = Object.keys(row)
 					const values = Object.values(row)
 					const query = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map((column, index) => `$${index + 1}`).join(', ')})`
-					await this.knexDatabase.raw(query, values)
+					await this.knexInstance.raw(query, values)
 				}
 			}
 			resolve()
@@ -120,7 +120,7 @@ module.exports = class DataManager {
 
 	getPrimaryKey(key) {
 		if (!key.includes('.')) key = `${key}.*`
-		const primaryKey = this.knexDatabase.keys.find(keyobj => keyobj.key === key)?.primaryKey
+		const primaryKey = this.knexInstance.keys.find(keyobj => keyobj.key === key)?.primaryKey
 		const receivedFrom = new Error().stack.split('\n')[2].trim()
 		if (!primaryKey) return console.log(`[DATABASE] Invalid key: ${key}\n${receivedFrom}`.red)
 		return primaryKey
@@ -167,7 +167,7 @@ module.exports = class DataManager {
 
 	query(query, params) {
 		return new Promise(async (resolve) => {
-			const result = await this.knexDatabase.raw(query, params)
+			const result = await this.knexInstance.raw(query, params)
 			resolve(result)
 		})
 	}
@@ -230,7 +230,7 @@ module.exports = class DataManager {
 		})
 
 		for (const key of keys) {
-			const threeSimilarKeys = this.knexDatabase.keys.filter(keyobj => keyobj.key.includes(key.split('.')[0])).map(keyobj => keyobj.key).slice(0, 3)
+			const threeSimilarKeys = this.knexInstance.keys.filter(keyobj => keyobj.key.includes(key.split('.')[0])).map(keyobj => keyobj.key).slice(0, 3)
 			if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key: ${key.toUpperCase()} in values: ${values}, expected object. Values: ${values} and primaryValues: ${primaryValues}\n${receivedFrom}\nSimilar keys: ${threeSimilarKeys}`.red)
 		}
 
@@ -274,7 +274,7 @@ module.exports = class DataManager {
 	}
 
 	validKey(key) {
-		return this.knexDatabase.keys.find(keyobj => keyobj.key === key)
+		return this.knexInstance.keys.find(keyobj => keyobj.key === key)
 	}
 
 	async benchmark(id) {

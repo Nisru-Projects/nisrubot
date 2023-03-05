@@ -184,15 +184,15 @@ module.exports = class CharacterController {
 			{
 				'characters_geral.essence': essence,
 				'characters_geral.attributes': data.baseAttributes,
-				'users.characters': this.client.knexDatabase.raw('array_append(characters, ?)', [character_id]),
+				'users.characters': this.client.knexInstance.raw('array_append(characters, ?)', [character_id]),
 				'users.selected_character': character_id,
 			})
 
 	}
 
 	deleteCharacter(character_id) {
-		return this.client.knexDatabase('users').where('discord_id', this.user.id).update({
-			characters: this.client.knexDatabase.raw('array_remove(characters, ?)', [character_id]),
+		return this.client.knexInstance('users').where('discord_id', this.user.id).update({
+			characters: this.client.knexInstance.raw('array_remove(characters, ?)', [character_id]),
 		})
 	}
 
@@ -201,17 +201,17 @@ module.exports = class CharacterController {
 	}
 
 	updateCharacter(character_id, table, data) {
-		return this.client.knexDatabase(table).where('character_id', character_id).update(data)
+		return this.client.knexInstance(table).where('character_id', character_id).update(data)
 	}
 
 	async transferCharacter(new_user, character_id) {
-		await this.client.knexDatabase('users').where('discord_id', this.user.id).update({
-			characters: this.client.knexDatabase.raw('array_remove(characters, ?)', [character_id]),
+		await this.client.knexInstance('users').where('discord_id', this.user.id).update({
+			characters: this.client.knexInstance.raw('array_remove(characters, ?)', [character_id]),
 			selected_character: null,
 		})
 
-		return await this.client.knexDatabase('users').where('discord_id', new_user.id).update({
-			characters: this.client.knexDatabase.raw('array_append(characters, ?)', [character_id]),
+		return await this.client.knexInstance('users').where('discord_id', new_user.id).update({
+			characters: this.client.knexInstance.raw('array_append(characters, ?)', [character_id]),
 			selected_character: character_id,
 		})
 	}

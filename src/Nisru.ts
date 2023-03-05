@@ -1,13 +1,22 @@
-const { GatewayIntentBits, Client } = require('discord.js')
+import { ConfigOptions } from "./types/config"
+
+import { GatewayIntentBits, Client } from 'discord.js'
 process.removeAllListeners('warning')
-const eventsHandler = require('./handlers/eventsHandler')
-const DbManager = require('./managers/DbManager')
-const RedisManager = require('./managers/RedisManager')
-const DataManager = require('./managers/DataManager')
+import eventsHandler from './handlers/eventsHandler'
+import PgManager from './managers/PgManager'
+import RedisManager from './managers/RedisManager'
+import DataManager from './managers/DataManager'
+import { NisruCommand } from "./types/commandOptions"
 
-module.exports = class NisruClient extends Client {
+class NisruClient extends Client {
+	dataManager: any
+	config!: ConfigOptions
+	token!: string
+	knexInstance!: any
+	commands: NisruCommand[] = []
+	languages: NisruLanguage 
 
-	constructor(options = {}) {
+	constructor(options: ConfigOptions) {
 
 		super({
 			allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
@@ -17,7 +26,7 @@ module.exports = class NisruClient extends Client {
 		console.log(' ')
 		eventsHandler(this)
 
-		const Database = new DbManager(options)
+		const Database = new PgManager(options)
 		const RedisCache = new RedisManager(this)
 
 		this.dataManager = new DataManager(Database.loadData(this), RedisCache.loadData(this))
@@ -30,7 +39,7 @@ module.exports = class NisruClient extends Client {
 
 	}
 
-	verification(options) {
+	verification(options: ConfigOptions) : void {
 		if (!options[options.mode].BOT_TOKEN) {
 			console.log('[ERROR] Token not found'.red)
 			return process.exit(1)
@@ -39,8 +48,10 @@ module.exports = class NisruClient extends Client {
 		this.config = options
 	}
 
-	async login() {
-		await super.login(this.token)
+	async login(): Promise<string> {
+		return super.login(this.token)
 	}
 
 }
+
+export default NisruClient

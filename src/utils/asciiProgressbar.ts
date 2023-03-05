@@ -1,4 +1,14 @@
-function asciiProgressbar({ percent, size, fullChar, emptyChar, middleChar, type = 0 }) {
+
+type ProgressBar = {
+	percent: number
+	size: number
+	fullChar: string
+	emptyChar: string
+	middleChar: string
+	type: number | 0
+}
+
+function asciiProgressbar({ percent, size, fullChar, emptyChar, middleChar, type }: ProgressBar) {
 	// type 0 ■■■■■■◧□□□□□□
 	// type 1 ⬤⬤⬤⬤⬤⬤◐○○○○○○
 	// type 2 ▰▰▰▰▰▰▱▱▱▱▱▱
