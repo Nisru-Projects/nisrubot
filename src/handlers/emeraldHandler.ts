@@ -1,10 +1,17 @@
-const EmeraldManager = require('../managers/EmeraldManager')
-const LanguagesController = require('../controllers/LanguagesController')
+import NisruClient from "../Nisru"
 
-module.exports = async (client) => {
+const EmeraldManager = require('../managers/EmeraldManager')
+
+type FileData = {
+	name: string
+	size: number
+	path: string
+	data: any
+}
+
+module.exports = async (client: NisruClient) => {
 
 	const emeraldManager = new EmeraldManager(client.config.emeraldtoken)
-	const languages = new LanguagesController('pt-BR')
 
 	async function loadLanguages() {
 
@@ -14,10 +21,8 @@ module.exports = async (client) => {
 
 		for (const file of res.data) {
 			const content = await emeraldManager.getContent(file.download_url)
-			languages.add(content.data)
+			client.languages.add(content.data)
 		}
-
-		client.languages = languages
 
 		console.log(`[LANGUAGE] Loaded ${res.data.length} languages in ${(Date.now() - time) / 1000}s`.green)
 	}
@@ -29,7 +34,7 @@ module.exports = async (client) => {
 		try {
 			const res = await emeraldManager.getFiles('nisruemerald', 'resources/configs')
 
-			if (!res.data) return console.log('[CONFIG] No configs found').red
+			if (!res.data) return console.log('[CONFIG] No configs found'.red)
 
 			for (const file of res.data) {
 				const content = await emeraldManager.getContent(file.download_url)
@@ -46,13 +51,13 @@ module.exports = async (client) => {
 
 	async function loadSkins() {
 		const res = await emeraldManager.getFiles('nisruemerald', 'resources/characters/skins')
-		res.data.forEach(async type => {
+		res.data.forEach(async (type: any) => {
 			if (type.type === 'dir') {
 				const files = await emeraldManager.getFiles('nisruemerald', `resources/characters/skins/${type.name}`)
-				files.data.forEach(async file => {
+				files.data.forEach(async (file: any) => {
 					if (file.type === 'file') {
 						const content = await emeraldManager.getContent(file.download_url, true)
-						const skinData = {
+						const skinData: FileData = {
 							name: file.name,
 							path: file.path,
 							size: file.size,
@@ -69,10 +74,10 @@ module.exports = async (client) => {
 
 		try {
 			const res = await emeraldManager.getFiles('nisruemerald', 'resources')
-			const fullworld = res.data.find(file => file.name === 'fullworld.png')
+			const fullworld = res.data.find((file: any) => file.name === 'fullworld.png')
 			const content = await emeraldManager.getContent(fullworld.download_url, true)
 			const fullworldinCache = await client.redisCache.get('fullworld')
-			const fullworldData = {
+			const fullworldData: FileData = {
 				name: fullworld.name,
 				path: fullworld.path,
 				size: fullworld.size,
@@ -92,7 +97,7 @@ module.exports = async (client) => {
 			const tiles = []
 			for (const tile of res.data) {
 				if (tile.type === 'file') {
-					const tileData = {
+					const tileData: FileData = {
 						name: tile.name,
 						path: tile.path,
 						size: tile.size,

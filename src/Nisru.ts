@@ -7,14 +7,17 @@ import PgManager from './managers/PgManager'
 import RedisManager from './managers/RedisManager'
 import DataManager from './managers/DataManager'
 import { NisruCommand } from "./types/commandOptions"
+import LanguagesController from "./controllers/LanguagesController"
 
 class NisruClient extends Client {
 	dataManager: any
 	config!: ConfigOptions
 	token!: string
 	knexInstance!: any
+	redisCache!: any
+	readyToPlay: any
 	commands: NisruCommand[] = []
-	languages: NisruLanguage 
+	languages: LanguagesController = new LanguagesController('pt-BR')
 
 	constructor(options: ConfigOptions) {
 

@@ -1,7 +1,13 @@
-const axios = require('axios')
+import axios from 'axios'
 
-module.exports = class EmeraldManager {
-	constructor(emeraldtoken) {
+export default class EmeraldManager {
+
+	emeraldtoken: string
+	BASE_URL: string
+	OWNER: string
+	headers: { Authorization: string }
+
+	constructor(emeraldtoken: string) {
 		this.emeraldtoken = emeraldtoken
 		this.BASE_URL = 'https://api.github.com'
 		this.OWNER = 'Nisru-Projects'
@@ -10,24 +16,24 @@ module.exports = class EmeraldManager {
 		}
 	}
 
-	getRepo(repo) {
+	getRepo(repo: string) : any {
 		return axios.get(`${this.BASE_URL}/repos/${this.OWNER}/${repo}`, {
 			headers: this.headers,
 		})
 	}
 
-	getFiles(repo, path = '') {
+	getFiles(repo: string, path = '') : any {
 		return axios.get(`${this.BASE_URL}/repos/${this.OWNER}/${repo}/contents/${path}`, {
 			headers: this.headers,
 		})
 	}
 
-	getContent(download_url, data64 = false) {
+	getContent(download_url: string, data64 = false) : any {
 		if (data64) {
 			return axios.get(download_url, {
 				headers: this.headers,
 				responseType: 'arraybuffer',
-				transformResponse: [data => Buffer.from(data, 'binary').toString('base64')],
+				transformResponse: [(data: any) => Buffer.from(data, 'binary').toString('base64')],
 			})
 		}
 		return axios.get(download_url, {
