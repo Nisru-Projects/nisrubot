@@ -1,7 +1,8 @@
-const { createClient } = require('redis')
+import { createClient } from 'redis'
+import type { NisruClient } from '../Nisru'
 const redisClient = createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:6379` })
-module.exports = class RedisManager {
-	loadData(client) {
+class RedisManager {
+	loadData(client: NisruClient) {
 		client.redisCache = this
 		const time = Date.now()
 		this.connect().then(() => {
@@ -32,7 +33,7 @@ module.exports = class RedisManager {
 		return redisClient.flushAll()
 	}
 
-	set(key, value, expiration_time) {
+	set(key: string, value: string, expiration_time?: number) {
 
 		if (expiration_time) {
 			return redisClient.set(key, value, 'EX', expiration_time)
@@ -56,3 +57,5 @@ module.exports = class RedisManager {
 		return redisClient.exists(key)
 	}
 }
+export default RedisManager
+export type { RedisManager }

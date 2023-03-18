@@ -1,15 +1,10 @@
-import NisruClient from "../Nisru"
+import type { NisruClient } from '../Nisru'
 
-const EmeraldManager = require('../managers/EmeraldManager')
+import EmeraldManager from '../managers/EmeraldManager'
 
-type FileData = {
-	name: string
-	size: number
-	path: string
-	data: any
-}
+import { FileData } from '../types/emerald'
 
-module.exports = async (client: NisruClient) => {
+export default async (client: NisruClient) => {
 
 	const emeraldManager = new EmeraldManager(client.config.emeraldtoken)
 

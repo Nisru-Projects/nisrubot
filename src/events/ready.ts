@@ -1,7 +1,7 @@
-import NisruClient from "../Nisru"
+import type { NisruClient } from '../Nisru'
 
-const commandHandler = require('../handlers/commandHandler')
-const emeraldHandler = require('../handlers/emeraldHandler')
+import commandHandler from '../handlers/commandHandler'
+import emeraldHandler from '../handlers/emeraldHandler'
 
 module.exports = {
 

@@ -57,4 +57,6 @@ class NisruClient extends Client {
 
 }
 
+export type { NisruClient }
+
 export default NisruClient

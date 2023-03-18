@@ -1,11 +1,4 @@
-type LanguageName = string
-type LanguageContent = object | any
-type LanguageKey = string
-
-type Language = {
-	name: LanguageName
-	content: LanguageContent
-}
+import { Language, LanguageContent, LanguageKey, LanguageName } from '../types/Language'
 
 export default class LanguagesController {
 
@@ -47,7 +40,7 @@ export default class LanguagesController {
 	}
 
 
-	content(key: LanguageKey, vars: any, languageName = this.default_language) : string {
+	content(key: LanguageKey, vars?: any, languageName = this.default_language) : string {
 		try {
 			let contentkey = this.get(languageName)
 
