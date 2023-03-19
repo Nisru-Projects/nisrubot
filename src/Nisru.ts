@@ -30,7 +30,7 @@ class NisruClient extends Client {
 		eventsHandler(this)
 
 		const Database = new PgManager(options)
-		const RedisCache = new RedisManager(this)
+		const RedisCache = new RedisManager()
 
 		this.dataManager = new DataManager(Database.loadData(this), RedisCache.loadData(this))
 

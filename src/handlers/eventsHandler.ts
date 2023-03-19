@@ -1,11 +1,12 @@
-const { readdirSync } = require('fs')
+import { readdirSync } from 'fs'
+import type { NisruClient } from '../Nisru'
 
-module.exports = (client) => {
+export default (client: NisruClient) => {
 	const files = readdirSync('./src/events/')
 	const time = Date.now()
 	files.forEach(file => {
 		const eventFunction = require(`../events/${file}`)
-		const execute = (...args) => eventFunction.execute(client, ...args)
+		const execute = (...args: any[]) => eventFunction.execute(client, ...args)
 		if (eventFunction.once) {
 			return client.once(eventFunction.name, execute)
 		}

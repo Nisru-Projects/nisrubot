@@ -22,7 +22,7 @@ class RedisManager {
 		return redisClient.connect()
 	}
 
-	async clearWithPrefix(prefix) {
+	async clearWithPrefix(prefix: string) {
 		const keys = await redisClient.keys(`${prefix}*`)
 		if (keys.length) {
 			return redisClient.del(keys)
@@ -33,7 +33,7 @@ class RedisManager {
 		return redisClient.flushAll()
 	}
 
-	set(key: string, value: string, expiration_time?: number) {
+	set(key: any, value: any, expiration_time?: any) {
 
 		if (expiration_time) {
 			return redisClient.set(key, value, 'EX', expiration_time)
@@ -41,19 +41,19 @@ class RedisManager {
 		return redisClient.set(key, value)
 	}
 
-	add(key, value) {
-		return redisClient.add(key, value)
+	add(key: any, value: any) {
+		return redisClient.sAdd(key, value)
 	}
 
-	get(key) {
+	get(key: any) {
 		return redisClient.get(key)
 	}
 
-	delete(key) {
+	delete(key: any) {
 		return redisClient.del(key)
 	}
 
-	exists(key) {
+	exists(key: any) {
 		return redisClient.exists(key)
 	}
 }
