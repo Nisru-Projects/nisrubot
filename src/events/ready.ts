@@ -38,7 +38,7 @@ module.exports = {
 
 		/* process.on('unhandledRejection', (reason) => {
 			const timeError = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-			const receivedFrom = new Error().stack.split('\n')[2].trim()
+			const receivedFrom = new Error().stack?.split('\n')[2].trim()
 			console.log(`[ERROR] Unhandled Rejection at: ${timeError}, reason: ${reason}\n${receivedFrom}`.red)
 		})
 

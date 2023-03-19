@@ -2,7 +2,8 @@ const fs = require('fs')
 const path = require('path')
 
 class GlobalData {
-	constructor(DataManager) {
+	DataManager: DataManager
+	constructor(DataManager: DataManager) {
 		this.DataManager = DataManager
 	}
 
@@ -13,25 +14,25 @@ class GlobalData {
 		}
 	}
 
-	async get(key) {
+	async get(key: any) : Promise<any> {
 		const data = await this.DataManager.get(this.DataManager.clientId, `global_data.${key}`)
 		return data || null
 	}
 
-	async set(key, value) {
+	async set(key: any, value: number) {
 		await this.DataManager.set({ 'global_data': this.DataManager.clientId }, { [`global_data.${key}`]: value })
 	}
 
-	async delete(key) {
+	async delete(key: any) {
 		await this.DataManager.delete(this.DataManager.clientId, `global_data.${key}`)
 	}
 
-	async exists(key) {
+	async exists(key: string) : Promise<boolean> {
 		const data = await this.get(key)
 		return data[`global_data.${key}`] != null
 	}
 
-	async increment(key, value) {
+	async increment(key: any, value: any) {
 		const data = await this.get(key)
 		if (data[`global_data.${key}`] == null) {
 			await this.set(key, Number(value))
@@ -43,11 +44,15 @@ class GlobalData {
 
 }
 
-module.exports = class DataManager {
-	constructor(knexDatabase, redisCache) {
-		this.knexInstance = knexDatabase
+class DataManager {
+	knexInstance: any
+	redisCache: any
+	clientId: any
+	globalData: GlobalData
+	constructor(knexInstance: any, redisCache: any) {
+		this.knexInstance = knexInstance
 		this.redisCache = redisCache
-		this.GlobalData = new GlobalData(this)
+		this.globalData = new GlobalData(this)
 	}
 
 	async createBackup() {
@@ -66,8 +71,8 @@ module.exports = class DataManager {
 		}
 		try {
 			const backup = await this.knexInstance.raw('SELECT * FROM information_schema.tables WHERE table_schema = \'public\'')
-			const tables = backup.rows.map(table => table.table_name)
-			const backupData = {}
+			const tables = backup.rows.map((table: any) => table.table_name)
+			const backupData: any = {}
 			for (const table of tables) {
 				const data = await this.knexInstance.raw(`SELECT * FROM ${table}`)
 				backupData[table] = data
@@ -86,7 +91,7 @@ module.exports = class DataManager {
 	async deleteOldBackups() {
 		const backupDir = path.join(__dirname, '..', '..', 'backups')
 		const files = fs.readdirSync(backupDir)
-		const filesToDelete = files.filter(file => {
+		const filesToDelete = files.filter((file: string) => {
 			const fileDate = new Date(file.split('_')[0].split('-').reverse().join('-'))
 			const currentDate = new Date()
 			const diff = currentDate.getTime() - fileDate.getTime()
@@ -99,8 +104,8 @@ module.exports = class DataManager {
 		}
 	}
 
-	restoreBackup(backupPath) {
-		return new Promise(async (resolve) => {
+	restoreBackup(backupPath: any) {
+		return new Promise<void>(async (resolve) => {
 			const backupData = JSON.parse(fs.readFileSync(backupPath))
 			const tables = Object.keys(backupData)
 			for (const table of tables) {
@@ -118,15 +123,15 @@ module.exports = class DataManager {
 		})
 	}
 
-	getPrimaryKey(key) {
+	getPrimaryKey(key: string | string[]) {
 		if (!key.includes('.')) key = `${key}.*`
-		const primaryKey = this.knexInstance.keys.find(keyobj => keyobj.key === key)?.primaryKey
-		const receivedFrom = new Error().stack.split('\n')[2].trim()
+		const primaryKey = this.knexInstance.keys.find((keyobj: { key: any }) => keyobj.key === key)?.primaryKey
+		const receivedFrom = new Error().stack?.split('\n')[2].trim()
 		if (!primaryKey) return console.log(`[DATABASE] Invalid key: ${key}\n${receivedFrom}`.red)
 		return primaryKey
 	}
 
-	updateCache(primaryValue, key, value) {
+	updateCache(primaryValue: any, key: string, value?: any) {
 
 		if (value) {
 			return this.redisCache.set(`${key}:${primaryValue}`, JSON.stringify(value), 60 * 60 * 2)
@@ -146,14 +151,14 @@ module.exports = class DataManager {
 		})
 	}
 
-	hasCache(primaryValue, key) {
+	hasCache(primaryValue: any, key: any) {
 		return new Promise(async (resolve) => {
 			const cached = await this.redisCache.get(`${key}:${primaryValue}`)
 			resolve(cached != null)
 		})
 	}
 
-	getFromCache(primaryValue, key) {
+	getFromCache(primaryValue: any, key: any) {
 		return new Promise(async (resolve) => {
 			const cached = await this.redisCache.get(`${key}:${primaryValue}`)
 			if (cached) {
@@ -165,29 +170,29 @@ module.exports = class DataManager {
 		})
 	}
 
-	query(query, params) {
+	query(query: string, params: any[]) : Promise<any> {
 		return new Promise(async (resolve) => {
 			const result = await this.knexInstance.raw(query, params)
 			resolve(result)
 		})
 	}
 
-	get(primaryValue, keys, forcecache = false) {
+	get(primaryValue: any, keys: string | any[], forcecache = false) {
 
 		if (typeof keys === 'string') keys = [keys]
 
-		keys = keys.map(key => {
+		keys = keys.map((key: string | string[]) => {
 			if (!key.includes('.')) return `${key}.*`
 			else return key
 		})
 
 		for (const key of keys) {
-			const receivedFrom = new Error().stack.split('\n')[2].trim()
+			const receivedFrom = new Error().stack?.split('\n')[2].trim()
 			if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key: ${key}\n${receivedFrom}`.red)
 		}
 
 		return new Promise(async (resolve) => {
-			const result = {}
+			const result: any = {}
 			for (const key of keys) {
 				const cached = await this.hasCache(primaryValue, key)
 				if (forcecache || !cached) {
@@ -208,7 +213,7 @@ module.exports = class DataManager {
 		})
 	}
 
-	insert(key, value) {
+	insert(key: string, value: any) {
 		return new Promise(async (resolve) => {
 			const primaryKey = this.getPrimaryKey(key)
 			const query = `INSERT INTO ${key.split('.')[0]} (${key.split('.')[1]}) VALUES (?) RETURNING ${primaryKey}`
@@ -217,9 +222,9 @@ module.exports = class DataManager {
 		})
 	}
 
-	set(primaryValues, values) {
+	set(primaryValues: { [x: string]: any; global_data?: any }, values: { [x: string]: any }) {
 
-		const receivedFrom = new Error().stack.split('\n')[2].trim()
+		const receivedFrom = new Error().stack?.split('\n')[2].trim()
 
 		if (typeof values !== 'object') return console.log(`[DATABASE] Invalid values type: ${typeof values}, expected object. Values: ${values}, primaryValues: ${primaryValues}\n${receivedFrom}`.red)
 		if (typeof primaryValues !== 'object') return console.log(`[DATABASE] Invalid primaryValues type: ${typeof primaryValues}, expected object. Values: ${primaryValues}\n${receivedFrom}`.red)
@@ -230,14 +235,14 @@ module.exports = class DataManager {
 		})
 
 		for (const key of keys) {
-			const threeSimilarKeys = this.knexInstance.keys.filter(keyobj => keyobj.key.includes(key.split('.')[0])).map(keyobj => keyobj.key).slice(0, 3)
+			const threeSimilarKeys = this.knexInstance.keys.filter((keyobj: { key: string | string[] }) => keyobj.key.includes(key.split('.')[0])).map((keyobj: { key: any }) => keyobj.key).slice(0, 3)
 			if (!this.validKey(key)) return console.log(`[DATABASE] Invalid key: ${key.toUpperCase()} in values: ${values}, expected object. Values: ${values} and primaryValues: ${primaryValues}\n${receivedFrom}\nSimilar keys: ${threeSimilarKeys}`.red)
 		}
 
 		const tables = keys.map(key => key.split('.')[0])
 		const uniqueTables = [...new Set(tables)]
 
-		return new Promise(async (resolve) => {
+		return new Promise<void>(async (resolve) => {
 			for (const table of uniqueTables) {
 				const primaryKey = this.getPrimaryKey(table)
 				const query = `UPDATE ${table} SET ${keys.filter(key => key.split('.')[0] === table).map(key => `${key.split('.')[1]} = ?`).join(', ')} WHERE ${primaryKey} = ?`
@@ -254,8 +259,8 @@ module.exports = class DataManager {
 		})
 	}
 
-	delete(primaryValue, key) {
-		return new Promise(async (resolve) => {
+	delete(primaryValue: any, key: string) {
+		return new Promise<void>(async (resolve) => {
 			const primaryKey = this.getPrimaryKey(key)
 			const query = `DELETE FROM ${key.split('.')[0]} WHERE ${primaryKey} = ?`
 			await this.query(query, [primaryValue])
@@ -264,7 +269,7 @@ module.exports = class DataManager {
 		})
 	}
 
-	exists(primaryValue, key) {
+	exists(primaryValue: any, key: string) {
 		return new Promise(async (resolve) => {
 			const primaryKey = this.getPrimaryKey(key)
 			const query = `SELECT * FROM ${key.split('.')[0]} WHERE ${primaryKey} = ?`
@@ -273,11 +278,11 @@ module.exports = class DataManager {
 		})
 	}
 
-	validKey(key) {
-		return this.knexInstance.keys.find(keyobj => keyobj.key === key)
+	validKey(key: string) {
+		return this.knexInstance.keys.find((keyobj: { key: any }) => keyobj.key === key)
 	}
 
-	async benchmark(id) {
+	async benchmark(id: any) {
 		const start = Date.now()
 		const res1 = await this.get(id, 'users.*', true)
 		const end = Date.now()
@@ -292,3 +297,5 @@ module.exports = class DataManager {
 	}
 
 }
+
+export default DataManager

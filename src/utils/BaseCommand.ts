@@ -1,6 +1,6 @@
 import { ApplicationCommandOption, Options } from "discord.js"
 import NisruClient from "../Nisru"
-import { NisruCommand } from "../types/commandOptions"
+import { NisruCommand } from "../types/commands"
 import { UserPermission } from "../types/database/users"
 
 export default class BaseCommand {

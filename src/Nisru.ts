@@ -1,12 +1,12 @@
 import { ConfigOptions } from "./types/config"
 
-import { GatewayIntentBits, Client } from 'discord.js'
+import { GatewayIntentBits, Client, Collection } from 'discord.js'
 process.removeAllListeners('warning')
 import eventsHandler from './handlers/eventsHandler'
 import PgManager from './managers/PgManager'
 import RedisManager from './managers/RedisManager'
 import DataManager from './managers/DataManager'
-import { NisruCommand } from "./types/commandOptions"
+import { NisruCommand } from "./types/commands"
 import LanguagesController from "./controllers/LanguagesController"
 
 class NisruClient extends Client {
@@ -16,7 +16,7 @@ class NisruClient extends Client {
 	knexInstance!: any
 	redisCache!: any
 	readyToPlay: any
-	commands: NisruCommand[] = []
+	commands: Collection<string, NisruCommand> = new Collection()
 	languages: LanguagesController = new LanguagesController('pt-BR')
 
 	constructor(options: ConfigOptions) {

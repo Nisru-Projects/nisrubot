@@ -48,7 +48,7 @@ class SkinManager {
 
 		for (const component of components) {
 
-			const receivedFrom = new Error().stack.split('\n')[2].trim()
+			const receivedFrom = new Error().stack?.split('\n')[2].trim()
 			if (component.skin == null) return console.log(`[SKIN] Component ${component.part} is null\n${receivedFrom}`.red, component)
 
 			const buffer = Buffer.from(component.skin.data, 'base64')

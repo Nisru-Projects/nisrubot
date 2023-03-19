@@ -1,7 +1,9 @@
-module.exports = (client, time) => {
+import type { NisruClient } from '../Nisru'
+
+export default (client: NisruClient, time: number) => {
 
 	client.knexInstance.keys = []
-	client.knexInstance.raw('SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = \'public\'').then(async (res) => {
+	client.knexInstance.raw('SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = \'public\'').then(async (res: any) => {
 		for (const row of res.rows) {
 			const primaryKey = await client.knexInstance.raw(`SELECT a.attname 
             FROM   pg_index i JOIN   pg_attribute a ON a.attrelid = i.indrelid 
@@ -9,10 +11,10 @@ module.exports = (client, time) => {
             WHERE  i.indrelid = '${row.table_name}'::regclass
             AND    i.indisprimary;`)
 			if (primaryKey.rows[0].attname == 'id') primaryKey.rows[0].attname = 'discord_id'
-			if (!client.knexInstance.keys.find(keyobj => keyobj.key === `${row.table_name}.*`)) client.knexInstance.keys.push({ key: `${row.table_name}.*`, primaryKey: primaryKey.rows[0].attname })
+			if (!client.knexInstance.keys.find((keyobj: any) => keyobj.key === `${row.table_name}.*`)) client.knexInstance.keys.push({ key: `${row.table_name}.*`, primaryKey: primaryKey.rows[0].attname })
 			client.knexInstance.keys.push({ key: `${row.table_name}.${row.column_name}`, primaryKey: primaryKey.rows[0].attname })
 		}
-		client.knexInstance.keys = client.knexInstance.keys.sort((a, b) => {
+		client.knexInstance.keys = client.knexInstance.keys.sort((a: any, b: any) => {
 			if (a.key < b.key) return -1
 			if (a.key > b.key) return 1
 			return 0

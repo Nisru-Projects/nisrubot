@@ -1,6 +1,6 @@
-interface GlobalData {
+interface globalData {
     client_id: bigint;
     totalcommands: bigint;
 }
 
-export type { GlobalData };
+export type { globalData };

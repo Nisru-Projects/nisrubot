@@ -1,7 +1,9 @@
-const { Collection } = require('discord.js')
-const { readdirSync } = require('fs')
-module.exports = (client) => {
-	const commandsCollection = new Collection()
+import { Collection } from 'discord.js'
+import { readdirSync } from 'fs'
+import type { NisruClient } from '../Nisru'
+import { NisruCommand } from '../types/commands'
+module.exports = (client: NisruClient) => {
+	const commandsCollection = new Collection<string, NisruCommand>()
 
 	const categories = readdirSync('./src/cmds/')
 

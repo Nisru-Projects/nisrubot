@@ -1,4 +1,7 @@
-const MiddlewareController = require('../controllers/MiddlewareController')
+import { CommandInteraction } from 'discord.js'
+import type { NisruClient } from '../Nisru'
+
+import MiddlewareController from '../controllers/MiddlewareController'
 
 const messages = {
 	'noPermission': 'Você não tem permissão para executar este comando.',
@@ -7,9 +10,9 @@ const messages = {
 	'errorCommand': 'Ocorreu um erro ao executar este comando.',
 }
 
-module.exports = {
+export default {
 	name: 'interactionCreate',
-	execute: async (client, interaction) => {
+	execute: async (client: NisruClient, interaction: CommandInteraction) => {
 
 		const Middleware = new MiddlewareController(client, interaction)
 
@@ -36,7 +39,7 @@ module.exports = {
 			}
 
 			cmd.execute(interaction, character).then(() => {
-				client.dataManager.GlobalData.increment('totalcommands', 1)
+				client.dataManager.globalData.increment('totalcommands', 1)
 			}).catch((err) => {
 				console.log(err)
 				interaction.reply({ content: messages.errorCommand, ephemeral: true })

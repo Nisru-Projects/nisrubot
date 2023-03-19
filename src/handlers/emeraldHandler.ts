@@ -118,7 +118,7 @@ export default async (client: NisruClient) => {
 	}
 
 	async function loadGlobalData() {
-		client.dataManager.GlobalData.setClientIfNotExists()
+		client.dataManager.globalData.setClientIfNotExists()
 	}
 
 	client.readyToPlay = {
