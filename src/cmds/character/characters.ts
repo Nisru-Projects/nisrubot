@@ -1,12 +1,15 @@
-const BaseCommand = require('../../utils/BaseCommand')
-const { ActionRowBuilder, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js')
-const disableAllComponents = require('../../utils/disableAllComponents')
-const CharacterController = require('../../controllers/CharacterController')
-const ActionsController = require('../../controllers/ActionsController')
-const { calculateLevel, percentageToNextLevel } = require('../../utils/levelingForms')
-const uppercaseFirstLetter = require('../../utils/uppercaseFirstLetter')
-const randomString = require('../../utils/randomString')
-const asciiProgressbar = require('../../utils/asciiProgressbar')
+import { ButtonComponent, CommandInteraction, InteractionResponse, Message } from "discord.js"
+import type { NisruClient } from "../../Nisru"
+
+import BaseCommand from '../../utils/BaseCommand'
+import { ActionRowBuilder, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js'
+import disableAllComponents from '../../utils/disableAllComponents'
+import CharacterController from '../../controllers/CharacterController'
+import ActionsController from '../../controllers/ActionsController'
+import { calculateLevel, percentageToNextLevel } from '../../utils/levelingForms'
+import uppercaseFirstLetter from '../../utils/uppercaseFirstLetter'
+import randomString from '../../utils/randomString'
+import asciiProgressbar from '../../utils/asciiProgressbar'
 
 const elements = [
 	{ name: 'fire', value: 'fire', emoji: '🔥', description: 'Fire', canSelect: true },
@@ -116,13 +119,13 @@ const races = [
 ]
 
 module.exports = class Command extends BaseCommand {
-	constructor(client) {
+	constructor(client: NisruClient) {
 		super(client, {
 			name: 'characters',
 			permissions: ['user'],
 		})
 	}
-	async execute(interaction, characters) {
+	async execute(interaction: CommandInteraction, characters: any) {
 
 		const ActionController = new ActionsController(this.client.redisCache)
 
@@ -143,7 +146,7 @@ module.exports = class Command extends BaseCommand {
 
 		const characterController = new CharacterController(this.client, interaction.user)
 
-		const action = {
+		const action : any = {
 			possiblesConstellations: constellations.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * (5 - 2 + 1) + 2)),
 			reset: () => {
 				action.active = false
@@ -157,9 +160,9 @@ module.exports = class Command extends BaseCommand {
 
 		action.reset()
 
-		const checkButton = (charactersComponents, buttonCustomId) => {
-			charactersComponents.forEach((row) => {
-				row.components.forEach((button) => {
+		const checkButton = (charactersComponents: any[], buttonCustomId: any) => {
+			charactersComponents.forEach((row : any) => {
+				row.components.forEach((button : any) => {
 					if (button.data.custom_id === buttonCustomId) {
 						button.data.label = LanguagesController.content('messages.characters.creationCharacterDefaults.confirm', { option: '{%messages.characters.creationCharacterDefaults.createOption}' })
 						button.data.custom_id = 'confirm'
@@ -170,7 +173,7 @@ module.exports = class Command extends BaseCommand {
 			})
 		}
 
-		async function menuEmbed(i) {
+		async function menuEmbed(i?: any) {
 
 			async function getCharactersComponents() {
 
@@ -274,7 +277,7 @@ module.exports = class Command extends BaseCommand {
 
 		const { charactersEmbed, charactersComponents } = await menuEmbed()
 
-		let charactersMsg
+		let charactersMsg: Message<boolean> & InteractionResponse<boolean>
 		try {
 			charactersMsg = await interaction.reply({ embeds: [charactersEmbed], components: charactersComponents, fetchReply: true })
 		}
@@ -283,7 +286,7 @@ module.exports = class Command extends BaseCommand {
 			return ActionController.removeAction(interaction.user.id, ['characters_command', 'use_character'])
 		}
 
-		const filter = (i) => i.user.id === interaction.user.id
+		const filter = (i: { user: { id: string } }) => i.user.id === interaction.user.id
 
 		const collector = charactersMsg.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 })
 
@@ -294,16 +297,16 @@ module.exports = class Command extends BaseCommand {
 				2: ['constellation', 'gamemode'],
 			}
 			const allValidations = Object.values(stepsValidations).flat()
-			return { stepsValidations, all: allValidations.map((validation) => action.character[validation]), step: stepsValidations[action.step].map((validation) => action.character[validation]) }
+			return { stepsValidations, all: allValidations.map((validation) => action.character[validation]), step: stepsValidations[action.step].map((validation: string | number) => action.character[validation]) }
 		}
 
 		const creationCharacter = async () => {
 
 			const showRequired = () => {
-				return validateCharacter().step.map((validation) => validation ? '✅' : '❌').join(' ')
+				return validateCharacter().step.map((validation: any) => validation ? '✅' : '❌').join(' ')
 			}
 
-			const creationEmbed = {
+			const creationEmbed : any = {
 				color: 0x36393f,
 				title: LanguagesController.content('messages.characters.charactersEmbed.creationtitle', { currentpage: action.step + 1, totalpages: action.stepMax + 1 }),
 				timestamp: new Date().toISOString(),
@@ -433,7 +436,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 						new StringSelectMenuBuilder()
 							.setCustomId('selectconstellation')
 							.setPlaceholder(LanguagesController.content('messages.characters.creationCharacterDefaults.select', { option: '{%nouns.constellation}' }))
-							.addOptions(action.possiblesConstellations.map((constellation) => {
+							.addOptions(action.possiblesConstellations.map((constellation: { name: any; value: any; emoji: any; description: any }) => {
 								return {
 									label: constellation.name,
 									value: constellation.value,
@@ -519,7 +522,7 @@ ${LanguagesController.content('nouns.constellation')}: ${action.character.conste
 			return i.editReply({ embeds: [temp], components: temp2 })
 		})
 
-		collector.on('collect', async (i) => {
+		collector.on('collect', async (i: any) => {
 
 			if (i.isStringSelectMenu()) {
 

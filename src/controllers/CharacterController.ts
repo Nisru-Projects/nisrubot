@@ -1,23 +1,27 @@
-const randomString = require('../utils/randomString')
-const Canvas = require('canvas')
+import type { NisruClient } from '../Nisru'
+
+import randomString from '../utils/randomString'
+import Canvas from 'canvas'
 const { createCanvas, loadImage } = Canvas
 
 class SkinManager {
-	constructor(client, Character) {
+	client: NisruClient
+	Character: any
+	constructor(client: NisruClient, Character: any) {
 		this.client = client
 		this.Character = Character
 	}
 
-	async getSkin(character_id) {
+	async getSkin(character_id: any) {
 		const skin = await this.client.dataManager.get(character_id, 'characters_geral.skin')
 		return skin['characters_geral.skin']
 	}
 
-	async setSkin(character_id, skinData) {
+	async setSkin(character_id: any, skinData: any) {
 		await this.client.dataManager.set({ 'characters_geral': character_id }, { 'characters_geral.skin': skinData })
 	}
 
-	async makeSkinBuffer(components) {
+	async makeSkinBuffer(components: any) {
 
 		const canvas = createCanvas(250, 250)
 		const ctx = canvas.getContext('2d')
@@ -123,8 +127,14 @@ class SkinManager {
 
 }
 
-module.exports = class CharacterController {
-	constructor(client, user) {
+class CharacterController {
+	client: any
+	user: any
+	getSkin: (character_id: any) => Promise<any>
+	setSkin: (character_id: any, skinData: any) => Promise<void>
+	makeSkinBuffer: (components: any) => Promise<void | Buffer>
+	characters!: { selected_character: any; characters: any} 
+	constructor(client: NisruClient, user: any) {
 		const skinManager = new SkinManager(client, this)
 		this.client = client
 		this.user = user
@@ -133,7 +143,7 @@ module.exports = class CharacterController {
 		this.makeSkinBuffer = skinManager.makeSkinBuffer.bind(skinManager)
 	}
 
-	getCharacterInfo(character_id, table) {
+	getCharacterInfo(character_id: any, table: any) {
 		return this.client.dataManager.get(character_id, `${table}.*`, true)
 	}
 
@@ -159,7 +169,7 @@ module.exports = class CharacterController {
 
 	}
 
-	async create(data) {
+	async create(data: { character_id: string; name: any; gender: any; element: any; race: any; constellation: any; gamemode: any; user_id: any; baseAttributes: any }) {
 		let character_id = randomString(16)
 
 		while ((await this.client.dataManager.get(character_id, 'characters_geral'))['characters_geral.*'] != null) {
@@ -190,21 +200,21 @@ module.exports = class CharacterController {
 
 	}
 
-	deleteCharacter(character_id) {
+	deleteCharacter(character_id: any) {
 		return this.client.knexInstance('users').where('discord_id', this.user.id).update({
 			characters: this.client.knexInstance.raw('array_remove(characters, ?)', [character_id]),
 		})
 	}
 
-	selectCharacter(character_id) {
+	selectCharacter(character_id: any) {
 		return this.client.dataManager.set({ 'users': this.user.id }, { 'users.selected_character': character_id })
 	}
 
-	updateCharacter(character_id, table, data) {
+	updateCharacter(character_id: any, table: any, data: any) {
 		return this.client.knexInstance(table).where('character_id', character_id).update(data)
 	}
 
-	async transferCharacter(new_user, character_id) {
+	async transferCharacter(new_user: { id: any }, character_id: any) {
 		await this.client.knexInstance('users').where('discord_id', this.user.id).update({
 			characters: this.client.knexInstance.raw('array_remove(characters, ?)', [character_id]),
 			selected_character: null,
@@ -217,3 +227,5 @@ module.exports = class CharacterController {
 	}
 
 }
+
+export default CharacterController

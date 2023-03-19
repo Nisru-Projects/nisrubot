@@ -2,7 +2,7 @@ import { Collection } from 'discord.js'
 import { readdirSync } from 'fs'
 import type { NisruClient } from '../Nisru'
 import { NisruCommand } from '../types/commands'
-module.exports = (client: NisruClient) => {
+export default (client: NisruClient) => {
 	const commandsCollection = new Collection<string, NisruCommand>()
 
 	const categories = readdirSync('./src/cmds/')
@@ -11,9 +11,9 @@ module.exports = (client: NisruClient) => {
 
 	categories.forEach(category => {
 		const commands = readdirSync(`./src/cmds/${category}`)
-		commands.filter(file => !file.includes('!') && file.endsWith('.js')).forEach(file => {
+		commands.filter(file => !file.includes('!') && file.endsWith('.ts')).forEach(file => {
 
-			const Command = require(`../cmds/${category}/${file.replace('.js', '')}`)
+			const Command = require(`../cmds/${category}/${file.replace('.ts', '')}`)
 
 			const cmd = new Command(client)
 

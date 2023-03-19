@@ -1,17 +1,19 @@
-const BaseCommand = require('../../utils/BaseCommand')
-const Canvas = require('canvas')
-const { AttachmentBuilder, EmbedBuilder } = require('discord.js')
-const randomNumber = require('../../utils/randomNumber')
-const isWater = require('../../utils/isWater')
+import BaseCommand from '../../utils/BaseCommand'
+import Canvas from 'canvas'
+import { AttachmentBuilder, EmbedBuilder } from 'discord.js'
+import { CommandInteraction } from 'discord.js'
+import type { NisruClient } from '../../Nisru'
+import randomNumber from '../../utils/randomNumber'
+import isWater from '../../utils/isWater'
 
-module.exports = class Command extends BaseCommand {
-	constructor(client) {
+export default class Command extends BaseCommand {
+	constructor(client: NisruClient) {
 		super(client, {
 			name: 'map',
 			permissions: ['user'],
 		})
 	}
-	async execute(interaction) {
+	async execute(interaction: CommandInteraction) {
 
 		await interaction.deferReply()
 
@@ -50,11 +52,11 @@ module.exports = class Command extends BaseCommand {
 
 		const tile = (Math.floor(playerPosition.x / tileWidth) + 1) + (Math.floor(playerPosition.y / tileHeight) * 10) - 1
 
-		const playerExploredTiles = []
+		const playerExploredTiles : any = []
 
 		for (let i = 0; i < randomNumber(80, 100); i++) {
 			const tileN = randomNumber(0, 100)
-			if (playerExploredTiles.find(t => t.tile === tileN)) continue
+			if (playerExploredTiles.find((t: { tile: number }) => t.tile === tileN)) continue
 			playerExploredTiles.push({
 				percentage: randomNumber(80, 100),
 				tile: tileN,
@@ -62,18 +64,18 @@ module.exports = class Command extends BaseCommand {
 		}
 
 		for (let i = 0; i < 100; i++) {
-			if (playerExploredTiles.find(t => t.tile === i)) continue
+			if (playerExploredTiles.find((t: { tile: number }) => t.tile === i)) continue
 			playerExploredTiles.push({
 				percentage: 0,
 				tile: i,
 			})
 		}
 
-		playerExploredTiles.sort((a, b) => a.tile - b.tile)
+		playerExploredTiles.sort((a: { tile: number }, b: { tile: number }) => a.tile - b.tile)
 
 		async function getLocalMap() {
 
-			const routingAngle = (Math.atan2(routingToPositionTileDirection.y - playerPositionTile.y, routingToPositionTileDirection.x - playerPositionTile.x) * 180 / Math.PI).toFixed(2)
+			const routingAngle : any = (Math.atan2(routingToPositionTileDirection.y - playerPositionTile.y, routingToPositionTileDirection.x - playerPositionTile.x) * 180 / Math.PI).toFixed(2)
 
 			const routingTile = (Math.floor(routingToPosition.x / tileWidth) + 1) + (Math.floor(routingToPosition.y / tileHeight) * 10)
 
@@ -189,7 +191,7 @@ module.exports = class Command extends BaseCommand {
 			for (let i = 0; i < 10; i++) {
 				for (let j = 0; j < 10; j++) {
 					const currentCheckTile = ((j * 10) + i)
-					const explored = playerExploredTiles.find(ptile => ptile.tile === currentCheckTile)
+					const explored = playerExploredTiles.find((ptile: { tile: number }) => ptile.tile === currentCheckTile)
 					// adicionar mais um pixel no width e height para não ficar com um pixel branco na borda
 					const imageData = ctx.getImageData(i * tileWidthInFullMap, j * tileHeightInFullMap, tileWidthInFullMap + 1, tileHeightInFullMap + 1)
 					const data = imageData.data

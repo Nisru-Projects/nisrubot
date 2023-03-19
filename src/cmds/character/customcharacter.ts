@@ -1,19 +1,22 @@
-const BaseCommand = require('../../utils/BaseCommand')
-const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, TextInputBuilder, TextInputStyle, ModalBuilder } = require('discord.js')
-const disableAllComponents = require('../../utils/disableAllComponents')
-const CharacterController = require('../../controllers/CharacterController')
-const ActionsController = require('../../controllers/ActionsController')
-const randomString = require('../../utils/randomString')
+import { CommandInteraction } from "discord.js"
+import type { NisruClient } from "../../Nisru"
 
-module.exports = class Command extends BaseCommand {
-	constructor(client) {
+import BaseCommand from '../../utils/BaseCommand'
+import { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, TextInputBuilder, TextInputStyle, ModalBuilder } from 'discord.js'
+import disableAllComponents from '../../utils/disableAllComponents'
+import CharacterController from '../../controllers/CharacterController'
+import ActionsController from '../../controllers/ActionsController'
+import randomString from '../../utils/randomString'
+
+export default class Command extends BaseCommand {
+	constructor(client: NisruClient) {
 		super(client, {
 			type: 'complementary',
 			name: 'customcharacter',
 			permissions: ['user'],
 		})
 	}
-	async execute(interaction) {
+	async execute(interaction: CommandInteraction) {
 
 		const redisCache = this.client.redisCache
 

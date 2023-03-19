@@ -1,7 +1,10 @@
-const BaseCommand = require('../../utils/BaseCommand')
+import { CommandInteraction } from 'discord.js'
+import type { NisruClient } from '../../Nisru'
 
-module.exports = class Command extends BaseCommand {
-	constructor(client) {
+import BaseCommand from '../../utils/BaseCommand'
+
+export default class Command extends BaseCommand {
+	constructor(client: NisruClient) {
 		super(client, {
 			name: client.languages.content('commands.benchmark.name'),
 			description: client.languages.content('commands.benchmark.name'),
@@ -9,7 +12,7 @@ module.exports = class Command extends BaseCommand {
 		})
 	}
 	// eslint-disable-next-line no-unused-vars
-	async execute(interaction) {
+	async execute(interaction: CommandInteraction) {
 
 		console.time('test')
 

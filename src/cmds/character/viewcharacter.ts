@@ -1,19 +1,21 @@
-const { EmbedBuilder, AttachmentBuilder } = require('discord.js')
-const ActionsController = require('../../controllers/ActionsController')
-const CharacterController = require('../../controllers/CharacterController')
-const asciiProgressbar = require('../../utils/asciiProgressbar')
-const BaseCommand = require('../../utils/BaseCommand')
-const { percentageToNextLevel, calculateLevel } = require('../../utils/levelingForms')
-const randomString = require('../../utils/randomString')
-
-module.exports = class Command extends BaseCommand {
-	constructor(client) {
+import { CommandInteraction } from 'discord.js'
+import type { NisruClient } from '../../Nisru'
+import { EmbedBuilder, AttachmentBuilder } from 'discord.js'
+import ActionsController from '../../controllers/ActionsController'
+import CharacterController from '../../controllers/CharacterController'
+import asciiProgressbar from '../../utils/asciiProgressbar'
+import BaseCommand from '../../utils/BaseCommand'
+import { percentageToNextLevel, calculateLevel } from '../../utils/levelingForms'
+import randomString from '../../utils/randomString'
+import { CharacterGender } from '../../types/database/characters_geral'
+export default class Command extends BaseCommand {
+	constructor(client: NisruClient) {
 		super(client, {
 			name: 'viewcharacter',
 			permissions: ['user'],
 		})
 	}
-	async execute(interaction) {
+	async execute(interaction: CommandInteraction) {
 
 		const characterController = new CharacterController(this.client, interaction.user)
 
@@ -54,7 +56,7 @@ module.exports = class Command extends BaseCommand {
 			const elementInfo = `${LanguagesController.content('nouns.element')}: \`${LanguagesController.content(`elements.${characterInfo.essence.element}`, { undefined: 'nouns.undefined' })}\``
 			const constellationInfo = `${LanguagesController.content('nouns.constellation')}: \`${LanguagesController.content(`constellations.${characterInfo.essence.constellation}`, { undefined: 'nouns.undefined' })}\``
 
-			const genderIcon = (gender) => {
+			const genderIcon = (gender: CharacterGender) => {
 				switch (gender) {
 				case 'male':
 					return '♂️'
@@ -77,7 +79,7 @@ module.exports = class Command extends BaseCommand {
 
 			console.log(characterInfo)
 
-			const characterInfoComponents = []
+			const characterInfoComponents : any = []
 			return { embeds: [characterInfoEmbed], components: characterInfoComponents, files: [skinAttachment] }
 		}
 

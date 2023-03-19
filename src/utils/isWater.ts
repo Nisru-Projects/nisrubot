@@ -1,4 +1,4 @@
-module.exports = (checkAreaCanvas, checkAreaCtx) => {
+export default (checkAreaCanvas: any, checkAreaCtx: any) => {
 	let waterInArea = 0
 	let totalInArea = 0
 
@@ -55,11 +55,11 @@ module.exports = (checkAreaCanvas, checkAreaCtx) => {
 		[127, 133, 142],
 	]
 
-	const colors = {}
-	const usedColors = []
-	const waterColorsUsed = []
+	const colors : any = {}
+	const usedColors: string[] = []
+	const waterColorsUsed: string[] = []
 
-	const isSimilarColor = (color1, color2, tolerance) => {
+	const isSimilarColor = (color1: number[], color2: number[], tolerance: number) => {
 		const distance = Math.sqrt(
 			Math.pow(color1[0] - color2[0], 2) +
 			Math.pow(color1[1] - color2[1], 2) +
@@ -106,7 +106,7 @@ module.exports = (checkAreaCanvas, checkAreaCtx) => {
 		}
 	}
 
-	const waterPercentage = (waterInArea / totalInArea).toFixed(4)
+	const waterPercentage : any = (waterInArea / totalInArea).toFixed(4)
 
 	if (waterPercentage > 0.4) {
 		const notUsedColors = usedColors.filter(color => !waterColorsUsed.includes(color) && colors[color] / totalInArea > 0.01)

@@ -33,12 +33,12 @@ export default {
 
 			const character = await Middleware.getCharacters()
 
-			if (!['users', 'admtools'].includes(cmd.category) && cmd.fileName != 'characters.js') {
+			if (!['users', 'admtools'].includes(cmd.category as any) && cmd.fileName != 'characters.js') {
 				if (character.characters.length == 0) return interaction.reply({ content: messages.noCharacter, ephemeral: true })
 				if (!character.selected_character) return interaction.reply({ content: messages.noSelectedCharacter, ephemeral: true })
 			}
 
-			cmd.execute(interaction, character).then(() => {
+			cmd.execute!(interaction, character).then(() => {
 				client.dataManager.globalData.increment('totalcommands', 1)
 			}).catch((err) => {
 				console.log(err)

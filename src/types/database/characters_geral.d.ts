@@ -1,6 +1,8 @@
+type CharacterGender = 'female' | 'male' | 'other';
+
 interface CharacterEssence {
     name: string;
-    gender: 'female' | 'male' | 'other';
+    gender: CharacterGender;
     element: string;
     race: string;
     constellation: string;
@@ -41,4 +43,4 @@ interface Character {
     skin: CharacterSkin;
 }
 
-export type { Character, CharacterEssence, CharacterAttributes, CharacterSkin, CharacterSkinPart };
+export type { Character, CharacterEssence, CharacterAttributes, CharacterSkin, CharacterSkinPart, CharacterGender };

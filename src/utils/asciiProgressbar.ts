@@ -8,7 +8,7 @@ type ProgressBar = {
 	type: number | 0
 }
 
-function asciiProgressbar({ percent, size, fullChar, emptyChar, middleChar, type }: ProgressBar) {
+function asciiProgressbar({ percent, size, fullChar, emptyChar, middleChar, type }: any) {
 	// type 0 ■■■■■■◧□□□□□□
 	// type 1 ⬤⬤⬤⬤⬤⬤◐○○○○○○
 	// type 2 ▰▰▰▰▰▰▱▱▱▱▱▱
@@ -63,4 +63,4 @@ function asciiProgressbar({ percent, size, fullChar, emptyChar, middleChar, type
 	return progress
 }
 
-module.exports = asciiProgressbar
+export default asciiProgressbar
